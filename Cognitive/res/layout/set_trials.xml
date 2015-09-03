@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_game"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/top"
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        > 
+
+       <!--  <Button
+            android:id="@+id/GridStyle"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Grid" /> -->
+
+        <Button
+            android:id="@+id/GraphStyle"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/graph" />
+        
+        <Button
+            android:id="@+id/clearData"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/clear" />
+        
+    </LinearLayout>
+    
+    
+    <LinearLayout
+        android:id="@+id/middle"
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        android:layout_below="@id/top">
+
+        <TextView
+            android:id="@+id/trial_bar"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:text="@string/trials" />
+
+        <TextView
+            android:id="@+id/set_bar"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:text="@string/set" />
+        
+        <TextView
+            android:id="@+id/chT_bar"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:text="@string/chT" />
+        
+        <TextView
+            android:id="@+id/mvT_bar"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:text="@string/mvT" />
+        
+    </LinearLayout>
+    
+
+   	<ListView  
+        android:id="@+id/android:list" 
+        android:layout_width="wrap_content"  
+        android:layout_height="fill_parent" 
+        android:layout_below="@id/middle"
+        android:divider="#000000"
+        android:dividerHeight="1dp">  
+    </ListView>  
+
+</RelativeLayout>

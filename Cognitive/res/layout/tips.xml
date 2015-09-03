@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:orientation="vertical" android:background="@drawable/bg_game"
+	>
+		<TextView
+		    android:id="@+id/tips_text"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:orientation="vertical"
+		    android:paddingBottom="50dip"
+		    android:paddingLeft="15dip" 
+		    android:paddingRight="15dip"
+		    android:paddingTop="35dip"
+		    android:text="@string/tips_text"
+		    android:textColor="#FF000000"
+		    android:textSize="16sp" />
+
+		<Button
+		    android:id="@+id/touch_to_start"
+		    android:layout_width="wrap_content"
+		    android:layout_height="50dip"
+		    android:layout_below="@+id/tips_text"
+		    android:layout_centerHorizontal="true"
+		    android:text="@string/touch_to_start"
+		    android:textColor="#FF292066"
+		    android:textSize="17sp" />
+		
+</RelativeLayout>
