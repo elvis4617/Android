@@ -460,7 +460,6 @@ int id action_menu_presenter 0x7f0a0006
 int id action_mode_bar 0x7f0a004e
 int id action_mode_bar_stub 0x7f0a004d
 int id action_mode_close_button 0x7f0a0036
-int id action_settings 0x7f0a0082
 int id activity_chooser_view_content 0x7f0a0037
 int id alertTitle 0x7f0a0041
 int id alignBounds 0x7f0a000b
@@ -623,10 +622,6 @@ int layout select_dialog_singlechoice_material 0x7f030027
 int layout set_trials 0x7f030028
 int layout support_simple_spinner_dropdown_item 0x7f030029
 int layout tips 0x7f03002a
-int menu data__ch_t__trials_ 0x7f0d0000
-int menu data__mv_t__trials_ 0x7f0d0001
-int menu data__set__trials_ 0x7f0d0002
-int menu result 0x7f0d0003
 int raw miss 0x7f050000
 int raw pass 0x7f050001
 int raw timeout 0x7f050002
