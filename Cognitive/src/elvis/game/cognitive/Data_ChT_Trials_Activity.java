@@ -8,7 +8,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ListView;
+import android.widget.ListView; 
 import android.widget.SimpleAdapter;
 import elvis.game.cognitive.dao.DBManager;
 import elvis.game.cognitive.data.Trials;
