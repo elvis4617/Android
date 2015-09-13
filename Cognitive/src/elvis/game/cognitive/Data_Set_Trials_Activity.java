@@ -6,6 +6,7 @@ import java.util.List;
 
 import android.app.ListActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -48,7 +49,7 @@ public class Data_Set_Trials_Activity extends ListActivity implements
 		// TODO Auto-generated method stub
 		super.onListItemClick(l, v, position, id);
 		HashMap<String, Object> hm;
-		TextView trial = (TextView) l.getChildAt(position).findViewById(
+		TextView trial = (TextView) l.getChildAt(position - l.getFirstVisiblePosition()).findViewById(
 				R.id.trials);
 		if (!isToggle[Integer.parseInt(trial.getText().toString())]) {
 			List<Trials> trials = mgr.queryForTrial(trial.getText().toString());

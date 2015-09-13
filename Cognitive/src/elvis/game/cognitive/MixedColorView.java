@@ -57,8 +57,6 @@ public class MixedColorView extends SurfaceView implements
 
 	private Map<Integer, Paint> colorBgMap;
 
-	private Map<Integer, Integer> textColorMap;
-
 	private Paint mSrcPaint;
 	private Paint mTarPaint;
 	private Paint mGameMsgRightPaint;
@@ -83,35 +81,6 @@ public class MixedColorView extends SurfaceView implements
 		mHandler = new Handler() {
 			@Override
 			public void handleMessage(Message m) {
-
-				/*LayoutInflater factory = LayoutInflater.from(mContext);
-				View dialogView = factory.inflate(R.layout.score_post_panel,
-						null);
-				dialogView.setFocusableInTouchMode(true);
-				dialogView.requestFocus();
-
-				final AlertDialog dialog = new AlertDialog.Builder(mContext) 
-						.setView(dialogView).create();
-				dialog.setCanceledOnTouchOutside(false);
-				dialog.show();
-				dialogView.findViewById(R.id.retry).setOnClickListener(
-						new OnClickListener() {
-							@Override
-							public void onClick(View v) {
-								dialog.dismiss();
-								clearSet(answerSet);
-								restartGame();
-							}
-						});
-				dialogView.findViewById(R.id.goback).setOnClickListener(
-						new OnClickListener() {
-							@Override
-							public void onClick(View v) {
-								dialog.dismiss();
-								((MixedColorActivity) mContext).finish();
-							}
-						});*/
-
 			}
 		};
 		this.rate = rate;
@@ -226,9 +195,8 @@ public class MixedColorView extends SurfaceView implements
 		colorBgMap = new HashMap<Integer, Paint>();
 
 		Paint curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#F5ABC6"));// pink E91E63 light pink
-														// #F5ABC6
-		colorBgMap.put(0, curColor);
+		curColor.setColor(Color.parseColor("#F5ABC6"));// pink E91E63 light pink						
+		colorBgMap.put(0, curColor); // #F5ABC6
 
 		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
 		curColor.setColor(Color.parseColor("#D6C6ED"));// indigo
@@ -251,35 +219,52 @@ public class MixedColorView extends SurfaceView implements
 		colorBgMap.put(5, curColor);
 
 		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#FFC125"));// orange
+		curColor.setColor(Color.parseColor("#FF8000"));// orange
 		colorBgMap.put(6, curColor);
 
 		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#B873FF"));// purple
+		curColor.setColor(Color.parseColor("#FF3399"));// darkpink
 		colorBgMap.put(7, curColor);
 
 		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
 		curColor.setColor(Color.parseColor("#00BCD4"));// cyan
 		colorBgMap.put(8, curColor);
+		
+		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
+		curColor.setColor(Color.parseColor("#34DCCD"));// light blue
+		colorBgMap.put(9, curColor);
+		
+		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
+		curColor.setColor(Color.parseColor("#B2FF66"));// green	
+		colorBgMap.put(10, curColor);
+		
+		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
+		curColor.setColor(Color.parseColor("#FFB266"));// light orange	
+		colorBgMap.put(11, curColor);
+		
+		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
+		curColor.setColor(Color.parseColor("#00CC66"));// green blue		
+		colorBgMap.put(12, curColor);
 
-		textColorMap = new HashMap<Integer, Integer>();
-		textColorMap.put(0, Color.parseColor("#F5ABC6"));
-		textColorMap.put(1, Color.parseColor("#D6C6ED"));
-		textColorMap.put(2, Color.parseColor("#F6C18D"));
-		textColorMap.put(3, Color.parseColor("#E43172"));
-		textColorMap.put(4, Color.parseColor("#8FDCB0"));
-		textColorMap.put(5, Color.parseColor("#2196F3"));
-		textColorMap.put(6, Color.parseColor("#FFC125"));
-		textColorMap.put(7, Color.parseColor("#B873FF"));
-		textColorMap.put(8, Color.parseColor("#00BCD4"));
+		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
+		curColor.setColor(Color.parseColor("#B973FA"));// light purpal	
+		colorBgMap.put(13, curColor);
+		
+		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
+		curColor.setColor(Color.parseColor("#F9A485"));// light pink
+		colorBgMap.put(14, curColor);
 
+		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
+		curColor.setColor(Color.parseColor("#FF3333"));// light red
+		colorBgMap.put(15, curColor);
+		
 		SharedPreferences baseSettings = mContext.getSharedPreferences(
 				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, 0);
 		mSoundsFlag = baseSettings.getBoolean(
 				MixedConstant.PREFERENCE_KEY_SOUNDS, true);
 		mVibratorFlag = baseSettings.getBoolean(
 				MixedConstant.PREFERENCE_KEY_VIBRATE, true);
-		soundPool = new SoundPool(10, AudioManager.STREAM_RING, 5);
+		soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 5);
 		soundPoolMap = new HashMap<Integer, Integer>();
 		soundPoolMap.put(UIModel.EFFECT_FLAG_MISS,
 				soundPool.load(getContext(), R.raw.miss, 1));
@@ -291,6 +276,17 @@ public class MixedColorView extends SurfaceView implements
 				soundPool.load(getContext(), R.raw.timeout, 1));
 	}
 
+	
+	public MixedThread getmUIThread() {
+		return mUIThread;
+	}
+	
+	
+	public int getTrialCounter() {
+		return trialCounter;
+	}
+
+	
 	// thread for updating UI
 	class MixedThread extends Thread {
 
@@ -315,6 +311,7 @@ public class MixedColorView extends SurfaceView implements
 				Canvas c = null;
 				int flag = 0;
 				try {
+					mUIModel.setTrialCounter(trialCounter);
 					mUIModel.updateUIModel();
 					c = mSurfaceHolder.lockCanvas(null);
 					synchronized (mSurfaceHolder) {
@@ -436,10 +433,10 @@ public class MixedColorView extends SurfaceView implements
 				AudioManager mgr = (AudioManager) getContext()
 						.getSystemService(Context.AUDIO_SERVICE);
 				float streamVolumeCurrent = mgr
-						.getStreamVolume(AudioManager.STREAM_RING);
+						.getStreamVolume(AudioManager.STREAM_MUSIC);
 				float streamVolumeMax = mgr
-						.getStreamMaxVolume(AudioManager.STREAM_RING);
-				float volume = streamVolumeCurrent / streamVolumeMax;
+						.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+				float volume = streamVolumeCurrent / streamVolumeMax * 0.5f;
 				soundPool.play(soundPoolMap.get(soundId), volume, volume, 1, 0,
 						1f);
 			} catch (Exception e) {
@@ -450,6 +447,11 @@ public class MixedColorView extends SurfaceView implements
 		public void setRunning(boolean run) {
 			mRun = run;
 		}
+
+		public UIModel getmUIModel() {
+			return mUIModel;
+		}
+		
 	}// Thread
 
 }

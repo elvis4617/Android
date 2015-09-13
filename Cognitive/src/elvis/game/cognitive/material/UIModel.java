@@ -3,7 +3,6 @@ package elvis.game.cognitive.material;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import android.graphics.RectF;
 import elvis.game.cognitive.dao.DBManager;
@@ -12,25 +11,15 @@ import elvis.game.cognitive.data.RectArea;
 import elvis.game.cognitive.data.Trials;
 
 public class UIModel {
-	public static final int COLOR_TYPE_BLACK = 0;
-	public static final int COLOR_TYPE_BHITE = 1;
-	public static final int COLOR_TYPE_YELLOW = 2;
-	public static final int COLOR_TYPE_RED = 3;
-	public static final int COLOR_TYPE_GREEN = 4;
-	public static final int COLOR_TYPE_BLUE = 5;
-	public static final int COLOR_TYPE_PINK = 6;
-	public static final int COLOR_TYPE_PURPLE = 7;
-	public static final int COLOR_TYPE_BROWN = 8;
 
-	public static final int TOTAL_COLOR_AMOUNT = 9;
+	public static final int TOTAL_COLOR_AMOUNT = 16;
 
 	public static final int FIELD_VIRGIN = 111;
 	public static final int FIELD_MARK = 999;
 
-	public static final int GAME_ATTRIBUTE_TOTAL_LEVEL = 6;
-	public static final int GAME_ATTRIBUTE_LEAST_COLOR = 9;
+	public static final int GAME_ATTRIBUTE_LEAST_COLOR = 16;
 	public static final int GAME_ATTRIBUTE_TOTAL_STAGE = 10;
-	public static final long GAME_ATTRIBUTE_MAX_TIME_PER_STAGE = 30000;
+	public static final long GAME_ATTRIBUTE_MAX_TIME_PER_STAGE = 10000;
 	public static final int GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT = 4;
 	public static final int TOTAL_GRID_AMOUNT = GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT
 			* GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT;
@@ -50,8 +39,6 @@ public class UIModel {
 	public static final int UI_ATTRIBUTE_TARGET_PAINT_AREA_MARGIN_TOP = 5;// 3
 	public static final int UI_ATTRIBUTE_INNER_PADDING_Y = 10;// 7
 
-	private Random mRan = new Random();
-
 	private int mGameStatus;
 
 	private RectArea mCanvasArea;
@@ -59,8 +46,6 @@ public class UIModel {
 	private RectArea mSrcPaintArea;
 
 	private RectArea mTarPaintArea;
-
-	private RectArea mSrcGrid;
 
 	private RectArea[] mTarGrid;
 
@@ -98,6 +83,14 @@ public class UIModel {
 		
 		if (mStageTime >= GAME_ATTRIBUTE_MAX_TIME_PER_STAGE) {
 			mEffectFlag = EFFECT_FLAG_TIMEOUT;
+			if(chT[mStageCounter] == -1)
+				chT[mStageCounter] = GAME_ATTRIBUTE_MAX_TIME_PER_STAGE;
+			else if(mvT[mStageCounter] == -1)
+				mvT[mStageCounter] = mStageTime - chT[mStageCounter];
+			
+			mgr.add(new Trials(trialCounter, mStageCounter + 1,
+					getChT()[mStageCounter], getMvT()[mStageCounter]));
+			
 			buildStage();
 		}
 
@@ -126,26 +119,10 @@ public class UIModel {
 
 	public void buildPaintArea(int colorAmount) {
 
-		// 存放被选中的颜色
-		int[] selColors = new int[colorAmount];
-		for (int i = 0; i < colorAmount; i++) {
-			selColors[i] = FIELD_VIRGIN;
-		}
-		// 随机选择颜色
-		randomMethod(selColors, 0, TOTAL_COLOR_AMOUNT);
-
 		List<Integer> paintPos = new ArrayList<Integer>();
 
-		for (int i = 0; i < 16; i++) {
-			// 填充扩充源颜色代码
-			if (i < 9)
+		for (int i = 0; i < colorAmount; i++) {
 				paintPos.add(i);
-			else {
-				int min = 0;
-				int max = 8;
-				int s = mRan.nextInt(max) % (max - min + 1) + min;
-				paintPos.add(s);
-			}
 		}
 
 		Collections.shuffle(paintPos);
@@ -154,7 +131,7 @@ public class UIModel {
 		ColorData curColorData;
 		RectArea curRectArea;
 		mTarColor.clear();
-		for (int i = 0; i < 16; i++) {
+		for (int i = 0; i < colorAmount; i++) {
 			curColor = paintPos.get(i);
 			curColorData = new ColorData();
 			curColorData.setMBgColor(curColor);
@@ -167,44 +144,10 @@ public class UIModel {
 			mTarColor.add(curColorData);
 		}
 
-		int[] srcColor = new int[3];
-		for (int i = 0; i < srcColor.length; i++) {
-			srcColor[i] = FIELD_VIRGIN;
-		}
-		randomMethod(srcColor, 0, colorAmount);
-		mSrcColor = new ColorData();
-		mSrcColor.setMBgColor(selColors[srcColor[0]]);
-		mSrcColor.setMTextColor(selColors[srcColor[1]]);
-		mSrcColor.setMText(selColors[srcColor[2]]);
-		mSrcColor.mMinX = mSrcGrid.mMinX;
-		mSrcColor.mMaxX = mSrcGrid.mMaxX;
-		mSrcColor.mMinY = mSrcGrid.mMinY;
-		mSrcColor.mMaxY = mSrcGrid.mMaxY;
-
-	}
-
-	public void randomMethod(int[] arr, int start, int end) {
-		if (start >= end) {
-			return;
-		}
-		for (int i = 0; i < arr.length; i++) {
-			if (arr[i] == FIELD_VIRGIN) {
-				arr[i] = FIELD_MARK;
-				int selectedIndex = start + mRan.nextInt(end - start);
-				arr[i] = selectedIndex;
-				randomMethod(arr, start, selectedIndex);
-				randomMethod(arr, selectedIndex + 1, end);
-				break;
-			}
-		}
 	}
 
 	public void checkSelection(int x, int y) {
 		
-		
-
-		
-		// temporally
 		if (mStageCounter >= 10) {
 			mEffectFlag = GAME_STATUS_GAMEOVER;
 			return;
@@ -386,6 +329,15 @@ public class UIModel {
 	public void setTrialCounter(int trialCounter) {
 		this.trialCounter = trialCounter;
 	}
+	
+	
+	public int getmStageCounter() {
+		return mStageCounter;
+	}
+
+	public void setmStageCounter(int mStageCounter) {
+		this.mStageCounter = mStageCounter;
+	}
 
 	public UIModel(RectArea canvasArea) {
 		chT = new long[10];
@@ -426,10 +378,6 @@ public class UIModel {
 							+ (gridSize + UI_ATTRIBUTE_TARGET_CELL_MARGIN)
 							* posOffsetY, gridSize);
 		}
-		mSrcGrid = new RectArea(UI_ATTRIBUTE_SOURCE_CELL_X_MARGIN,
-				mSrcPaintArea.mMaxY - UI_ATTRIBUTE_INNER_PADDING_Y - gridSize,
-				mCanvasArea.mMaxX - UI_ATTRIBUTE_SOURCE_CELL_X_MARGIN,
-				mSrcPaintArea.mMaxY - UI_ATTRIBUTE_INNER_PADDING_Y);
 		initStage();
 		mGameStatus = GAME_STATUS_RUNNING;
 		mEffectFlag = EFFECT_FLAG_NO_EFFECT;

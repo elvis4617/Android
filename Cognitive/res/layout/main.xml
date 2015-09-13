@@ -3,15 +3,20 @@
 	android:background="@drawable/bg_game" android:orientation="vertical"
 	android:layout_width="fill_parent" android:layout_height="fill_parent"
 	android:paddingTop="5dip">
-		<ImageView
-		    android:contentDescription="@string/app_name"
-		    android:layout_width="fill_parent"
-			android:layout_height="250dip" android:scaleType="center"
-			android:src="@drawable/game_logo" />
+	
+    	<ImageView
+    	    android:layout_width="match_parent"
+    	    android:layout_height="250dip"
+    	    android:contentDescription="@string/app_name"
+    	    android:gravity="center"
+    	    android:orientation="vertical"
+    	    android:scaleType="centerInside"
+    	    android:src="@drawable/game_logo" />
+    	
 		<LinearLayout android:orientation="vertical"
 			android:layout_height="wrap_content" android:layout_width="fill_parent"
 			android:layout_gravity="center"
-			android:layout_marginTop="20dip">
+			android:layout_marginTop="34dip">
 			<Button android:id="@+id/start_game" android:layout_width="193dip"
 				android:layout_height="wrap_content" android:layout_gravity="center"
 				android:text="@string/start_game" android:textColor="#FF292066"
@@ -33,4 +38,5 @@
 				android:textSize="17sp" android:padding="8dip" android:background="@drawable/button_style5"
 				android:layout_marginBottom="3dip" />
 		</LinearLayout>
+
 </FrameLayout>
