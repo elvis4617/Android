@@ -23,6 +23,7 @@ public class MixedColorMenuActivity extends Activity implements OnClickListener 
 				WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
 		setContentView(R.layout.main);
 
 		Button startButton = (Button) findViewById(R.id.start_game);

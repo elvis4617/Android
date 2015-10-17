@@ -28,6 +28,7 @@ import android.view.SurfaceView;
 import elvis.game.cognitive.dao.DBManager;
 import elvis.game.cognitive.data.ColorData;
 import elvis.game.cognitive.data.RectArea;
+import elvis.game.cognitive.data.TimeRecorder;
 import elvis.game.cognitive.material.UIModel;
 import elvis.game.cognitive.utils.MixedConstant;
 
@@ -68,12 +69,22 @@ public class MixedColorView extends SurfaceView implements
 
 	private int[][] hyperSet;
 	private int[][] answerSet;
-	private int trialCounter;
-	private DBManager mgr;
 	
+	private int setCounter;
+	private int hyperCounter;
+	private int blockCounter;
+	
+	private DBManager mgr;
+	private int orintation;
+	private String name;
+	private TimeRecorder timeRecorder;
 	private Random mRan = new Random();
+	
+	private int BLOCK_NUMBER = 5;
+	private int HYPER_NUMBER = 5;
+	private int SET_NUMBER = 5;
 
-	public MixedColorView(Context context, float rate) {
+	public MixedColorView(Context context, float rate, int orintation, String name) {
 		super(context);
 		mContext = context;
 		SurfaceHolder holder = getHolder();
@@ -83,25 +94,36 @@ public class MixedColorView extends SurfaceView implements
 			public void handleMessage(Message m) {
 			}
 		};
+		
 		this.rate = rate;
 
-		hyperSet = new int[10][2];
-		answerSet = new int[10][2];
+		hyperSet = new int[SET_NUMBER][2];
+		answerSet = new int[SET_NUMBER][2];
 
-		for (int i = 0; i < 10; i++) {
-			hyperSet[i][0] = mRan.nextInt(15) % (15 - 0 + 1) + 0;
-			hyperSet[i][1] = mRan.nextInt(15) % (15 - 0 + 1) + 0;
+		for (int i = 0; i < SET_NUMBER; i++) {
+			hyperSet[i][0] = mRan.nextInt(8) % (8 - 0 + 1) + 0;
+			hyperSet[i][1] = mRan.nextInt(8) % (8 - 0 + 1) + 0;
 			while (hyperSet[i][0] == hyperSet[i][1]) {
-				hyperSet[i][1] = mRan.nextInt(15) % (15 - 0 + 1) + 0;
+				hyperSet[i][1] = mRan.nextInt(8) % (8 - 0 + 1) + 0;
 			}
 			answerSet[i][0] = -1;
 			answerSet[i][1] = -1;
 		}
 
 		initRes();
+		
 		mUIThread = new MixedThread(holder, context, mHandler);
-		trialCounter = 1;
+		
+		setCounter = 0;
+		hyperCounter = 0;
+		blockCounter = 0;
+		
 		mgr = new DBManager(mContext);
+		this.orintation = orintation;
+		this.name = name;
+		this.timeRecorder = new TimeRecorder(BLOCK_NUMBER, HYPER_NUMBER, SET_NUMBER);
+		timeRecorder.setSubjectID(name);
+		
 		setFocusable(true);
 	}
 
@@ -117,6 +139,7 @@ public class MixedColorView extends SurfaceView implements
 		mUIThread.initUIModel(mPaintArea);
 		mUIThread.setRunning(true);
 		mUIThread.start();
+		Log.i("mUIThread start", "mUIThread start");
 	}
 
 	@Override
@@ -140,13 +163,13 @@ public class MixedColorView extends SurfaceView implements
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			mUIThread.mUIModel.setTrialCounter(trialCounter);
 			mUIThread.checkSelection((int) event.getX(), (int) event.getY());
 		}
 		return true;
 	}
 
 	public void restartGame() {
+		Log.i("restart", "restart");
 		mUIThread = new MixedThread(this.getHolder(), this.getContext(),
 				mHandler);
 		mUIThread.initUIModel(mPaintArea);
@@ -155,7 +178,7 @@ public class MixedColorView extends SurfaceView implements
 	}
 
 	private void clearSet(int[][] set) {
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 5; i++) {
 			set[i][0] = -1;
 			set[i][1] = -1;
 		}
@@ -282,10 +305,17 @@ public class MixedColorView extends SurfaceView implements
 	}
 	
 	
-	public int getTrialCounter() {
-		return trialCounter;
+	public int getSetCounter() {
+		return setCounter;
 	}
-
+	
+	public int getHyperCounter() {
+		return hyperCounter;
+	}
+	
+	public int getBlockCounter() {
+		return blockCounter;
+	}
 	
 	// thread for updating UI
 	class MixedThread extends Thread {
@@ -311,7 +341,7 @@ public class MixedColorView extends SurfaceView implements
 				Canvas c = null;
 				int flag = 0;
 				try {
-					mUIModel.setTrialCounter(trialCounter);
+					mUIModel.setTrialCounter(setCounter);
 					mUIModel.updateUIModel();
 					c = mSurfaceHolder.lockCanvas(null);
 					synchronized (mSurfaceHolder) {
@@ -327,12 +357,26 @@ public class MixedColorView extends SurfaceView implements
 						mSurfaceHolder.unlockCanvasAndPost(c);
 					}
 				}
-				if (flag == UIModel.EFFECT_FLAG_MISS || mUIModel.getStatus() == UIModel.GAME_STATUS_GAMEOVER) {
-					trialCounter++;
+				
+				//Log.i("flag", flag+"");
+				if(flag == UIModel.GAME_STATUS_COMPLETE_SET){
+					Log.i("here", "here");
 					mRun = false;
+					hyperCounter++;
+					setCounter = 0;
 					clearSet(answerSet);
 					restartGame();
 				}
+				
+				if (flag == UIModel.EFFECT_FLAG_MISS || flag == UIModel.EFFECT_FLAG_TIMEOUT) {
+					Log.i("There", "There");
+					mRun = false;
+					setCounter = 0;
+					clearSet(answerSet);
+					restartGame();
+				}
+				
+				
 			}
 		}
 
@@ -340,6 +384,9 @@ public class MixedColorView extends SurfaceView implements
 			canvas.drawBitmap(mBgImage, 0, 0, null);
 
 			UIModel uiModel = mUIModel;
+			
+			//canvas.drawRoundRect(uiModel.getSrcPaintArea(), 15, 15, mSrcPaint);
+			/*canvas.drawRoundRect(uiModel.getTarPaintArea(), 15, 15, mTarPaint);*/
 
 			FontMetrics fmsr = mGameMsgLeftPaint.getFontMetrics();
 			canvas.drawText(uiModel.getStageText(), 5 * rate, 15 * rate
@@ -369,34 +416,37 @@ public class MixedColorView extends SurfaceView implements
 			int secondPos = mUIModel.getSecondPos();
 			int firstAns = mUIModel.getFirstAns();
 			int secondAns = mUIModel.getSecondAns();
-
+			
+			/*Log.i("first position", firstPos+"");
+			Log.i("second position", secondPos+"");*/
+			
 			List<ColorData> targetColors = uiModel.getTargetColor();
 			for (ColorData curColor : targetColors) {
 				Paint paint = colorBgMap.get(curColor.getMBgColor());
 				int color = paint.getColor();
 				canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);
+				
 				if ((firstAns != -1 && targetColors.indexOf(curColor) == firstPos)
 						|| (secondAns != -1 && targetColors.indexOf(curColor) == secondPos)) {
 					paint.setColor(Color.WHITE);
 					paint.setStyle(Style.STROKE);
-					paint.setStrokeWidth(10);
+					paint.setStrokeWidth(5);
 					canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);
 				} else if (targetColors.indexOf(curColor) == firstPos
 						|| targetColors.indexOf(curColor) == secondPos) {
 					paint.setColor(Color.DKGRAY);
 					paint.setStyle(Style.STROKE);
-					paint.setStrokeWidth(10);
+					paint.setStrokeWidth(5);
 					canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);
 				}
+				
 				paint.setColor(color);
 				paint.setStyle(Style.FILL);
 			}
 		}
 
 		public void initUIModel(RectArea paintArea) {
-			if (mUIModel != null) {
-			}
-			mUIModel = new UIModel(paintArea);
+			mUIModel = new UIModel(paintArea, orintation, timeRecorder);
 			mUIModel.setHyperSet(hyperSet);
 			mUIModel.setAnswerSet(answerSet);
 			mUIModel.setMgr(mgr);

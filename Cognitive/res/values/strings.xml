@@ -35,5 +35,6 @@
     <string name="title_activity_data__set__trials_">Data_Set_Trials_Activity</string>
     <string name="title_activity_data__ch_t__trials_">Data_ChT_Trials_Activity</string>
     <string name="title_activity_data__mv_t__trials_">Data_MvT_Trials_Activity</string>
+    <string name="go">Go!</string>
 
 </resources>

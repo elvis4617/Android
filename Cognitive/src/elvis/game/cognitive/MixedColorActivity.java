@@ -5,7 +5,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Display;
 import android.view.Window;
 import android.view.WindowManager;
@@ -16,6 +19,7 @@ public class MixedColorActivity extends Activity {
 
 	private DBManager mgr;
 	private BroadcastReceiver mBatInfoReceiver;
+	private int orientation;
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -28,15 +32,29 @@ public class MixedColorActivity extends Activity {
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		mgr = new DBManager(this);
-
+		
+		Intent i = getIntent();
+		String name = i.getStringExtra("subject");
+		
 		WindowManager windowManager = getWindowManager();
 		Display display = windowManager.getDefaultDisplay();
 		int screenWidth = display.getWidth();
-		float rate = screenWidth / 320f;
-
-		final MixedColorView view = new MixedColorView(MixedColorActivity.this, rate);
-
+		int screenHeight = display.getHeight();
+		float rate = /*screenWidth / 800*/1f;
+		
+		Log.i("width", screenWidth+"");
+		Log.i("height", display.getHeight()+"");
+		Log.i("rate", rate+"");
+		if (screenWidth > screenHeight) {  
+		      orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;  
+		} else {  
+			orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;  
+		}  
+		
+		final MixedColorView view = new MixedColorView(MixedColorActivity.this, rate, orientation, name);
+		Log.i("orientation", orientation+"");
 		setContentView(view);
+		//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
 		mgr.clear();
 		
 		 final IntentFilter filter = new IntentFilter();  
@@ -51,9 +69,9 @@ public class MixedColorActivity extends Activity {
 					String action = intent.getAction(); 
 
 		            if (Intent.ACTION_SCREEN_OFF.equals(action)) {  
-		            	mgr.add(new Trials(view.getTrialCounter(), view.getmUIThread().getmUIModel().getmStageCounter() + 1,
+		            	/*mgr.add(new Trials(view.getTrialCounter(), view.getmUIThread().getmUIModel().getmStageCounter() + 1,
 								view.getmUIThread().getmUIModel().getChT()[view.getmUIThread().getmUIModel().getmStageCounter()], 
-								view.getmUIThread().getmUIModel().getMvT()[view.getmUIThread().getmUIModel().getmStageCounter()]));
+								view.getmUIThread().getmUIModel().getMvT()[view.getmUIThread().getmUIModel().getmStageCounter()]));*/
 		            	
 		            	finish();
 		            }
@@ -62,6 +80,21 @@ public class MixedColorActivity extends Activity {
 		    
 		    registerReceiver(mBatInfoReceiver, filter);  
 	}
+	
+	@Override
+	protected void onResume() {  
+		orientation = ActivityInfo.SCREEN_ORIENTATION_USER;  
+		this.setRequestedOrientation(orientation);  
+		Display display = getWindowManager().getDefaultDisplay();  
+		int width = display.getWidth();  
+		int height = display.getHeight();  
+		if (width > height) {  
+			orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;  
+		} else {  
+			orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;  
+		}  
+		super.onResume();  
+	}  
 	
 	@Override
 	protected void onDestroy() {
@@ -75,4 +108,9 @@ public class MixedColorActivity extends Activity {
 		unregisterReceiver(mBatInfoReceiver);  
 		super.finish();
 	}
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {  
+			super.onConfigurationChanged(newConfig);  
+			this.setRequestedOrientation(orientation);  
+	}  
 }
