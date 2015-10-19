@@ -1,21 +1,13 @@
 package elvis.game.cognitive;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
-import org.apache.commons.codec.binary.Base64;
-
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -55,7 +47,7 @@ public class Go extends Activity implements OnClickListener {
 		
 		
 		if(mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false) && !mGameSettings.getString("subjectBase64", "").equals("")){
-			getObjectInfo();
+			subject = (TimeRecorder) MixedConstant.getObjectInfo(this);
 			name.setText(subject.getSubjectID());
 		}else subject = new TimeRecorder(BLOCK_NUMBER, HYPER_NUMBER, SET_NUMBER);
 		
@@ -77,38 +69,21 @@ public class Go extends Activity implements OnClickListener {
 				Log.i("edittext name", name.getText().toString());
 				Log.i("subject initial", subject.toString());
 				
-				try { 
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					ObjectOutputStream oos = new ObjectOutputStream(baos); 
-					oos.writeObject(subject); 
-					
-					String subjectBase64 = new String(Base64.encodeBase64(baos.toByteArray())); 
-					mGameSettings.edit().putString("subjectBase64", subjectBase64).commit();
-				}catch (IOException e) {  
-		            e.printStackTrace();  
-		        }  
+				MixedConstant.saveObject(this, subject, MixedConstant.SUBJECT_NAME);
 				
 				Intent i = new Intent(this, MixedColorActivity.class);
-/*				Bundle bundle = new Bundle();
-				bundle.putString("subject", name.getText().toString());
-				i.putExtras(bundle);
-				Log.i("start", "start activity");*/
 				startActivity(i);
 		}
 	}
 	
-	protected void getObjectInfo() {  
-        try {  
-            SharedPreferences mSharedPreferences = getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, Context.MODE_PRIVATE);  
-            String personBase64 = mSharedPreferences.getString("subjectBase64", "");  
-            byte[] base64Bytes = Base64.decodeBase64(personBase64.getBytes());  
-            ByteArrayInputStream bais = new ByteArrayInputStream(base64Bytes);  
-            ObjectInputStream ois = new ObjectInputStream(bais);  
-            subject = (TimeRecorder) ois.readObject();  
-        } catch (Exception e) {  
-            e.printStackTrace();  
-        }  
-          
-    }  
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		// TODO Auto-generated method stub
+		 if(keyCode == KeyEvent.KEYCODE_BACK){
+			 startActivity(new Intent(this, MixedColorMenuActivity.class));
+			 return true;
+		 }
+		return super.onKeyDown(keyCode, event);
+	}
 	
 }

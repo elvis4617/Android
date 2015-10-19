@@ -1,8 +1,10 @@
 package elvis.game.cognitive;
 
+import sun.util.logging.resources.logging;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.CheckBox;
@@ -111,9 +113,10 @@ public class Prefs extends Activity {
 		else easy.setChecked(true);
 		
 		modeGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-
+			
 			@Override
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
+				Log.i("onChange","ONCHANGE");
 				int radioButtonId = group.getCheckedRadioButtonId();
 				RadioButton rb = (RadioButton) findViewById(radioButtonId);
 				if(rb.getText().equals("Easy Mode")){

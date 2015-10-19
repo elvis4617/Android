@@ -1,31 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res/org.void1898.www.mixedcolor"
-	android:layout_width="fill_parent" android:layout_height="fill_parent"
-	android:orientation="vertical" android:background="@drawable/bg_game">
-	
-    <CheckBox android:id="@+id/options_vibrate_checkbox"
-				android:layout_width="fill_parent" android:layout_height="50dip"
-				android:text="@string/options_vibrate_summary" android:textColor="#FF000000"></CheckBox>
-	<CheckBox android:id="@+id/options_sounds_checkbox"
-				android:layout_width="fill_parent" android:layout_height="50dip"
-				android:text="@string/options_sounds_summary" android:textColor="#FF000000"></CheckBox>
-	<CheckBox android:id="@+id/options_showtips_checkbox"
-				android:layout_width="fill_parent" android:layout_height="50dip"
-				android:text="@string/options_showtips_summary" android:textColor="#FF000000"></CheckBox>
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/bg_game"
+    android:orientation="vertical" >
 
-	<!-- <CheckBox android:id="@+id/options_hardmode_checkbox"
+    <CheckBox
+        android:id="@+id/options_vibrate_checkbox"
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:text="@string/options_vibrate_summary"
+        android:textColor="#FF000000" >
+    </CheckBox>
+
+    <CheckBox
+        android:id="@+id/options_sounds_checkbox"
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:text="@string/options_sounds_summary"
+        android:textColor="#FF000000" >
+    </CheckBox>
+
+    <CheckBox
+        android:id="@+id/options_showtips_checkbox"
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:text="@string/options_showtips_summary"
+        android:textColor="#FF000000" >
+    </CheckBox>
+
+    <!--
+         <CheckBox android:id="@+id/options_hardmode_checkbox"
 				android:layout_width="fill_parent" android:layout_height="50dip"
-				android:text="Hard Mode" android:textColor="#FF000000"></CheckBox> -->
-				
-	<RadioGroup android:id="@+id/modeRadioGroup" android:contentDescription="Mode" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal">
-	    <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/radioEasy" android:text="Easy Mode" android:checked="true" android:textColor="#FF000000"></RadioButton>
-        <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/radioHard" android:text="Hard Mode" android:textColor="#FF000000"></RadioButton>    
+				android:text="Hard Mode" android:textColor="#FF000000"></CheckBox>
+    -->
+
+    <RadioGroup
+        android:id="@+id/modeRadioGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Mode"
+        android:orientation="horizontal" >
+
+        <RadioButton
+            android:id="@+id/radioEasy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Easy Mode"
+            android:textColor="#FF000000" >
+        </RadioButton>
+
+        <RadioButton
+            android:id="@+id/radioHard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hard Mode"
+            android:textColor="#FF000000" >
+        </RadioButton>
     </RadioGroup>
-    
-	<RadioGroup android:id="@+id/sequanceRadioGroup" android:contentDescription="Set" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal">
-	    <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/radioSet1" android:text="Sequance 1" android:checked="true" android:textColor="#FF000000"></RadioButton>
-        <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/radioSet2" android:text="Sequance 2" android:textColor="#FF000000"></RadioButton>    
+
+    <RadioGroup
+        android:id="@+id/sequanceRadioGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Set"
+        android:orientation="horizontal" >
+
+        <RadioButton
+            android:id="@+id/radioSet1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Sequance 1"
+            android:textColor="#FF000000" >
+        </RadioButton>
+
+        <RadioButton
+            android:id="@+id/radioSet2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sequance 2"
+            android:textColor="#FF000000" >
+        </RadioButton>
     </RadioGroup>
-			
+
 </LinearLayout>

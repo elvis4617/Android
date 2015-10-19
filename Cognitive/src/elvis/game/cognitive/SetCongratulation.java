@@ -52,7 +52,7 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
 		toNextHyper = (Button) findViewById(R.id.toNextHyper);
 		toNextHyper.setOnClickListener(this);
 		
-		congra = (TextView) findViewById(R.id.congra);
+		congra = (TextView) findViewById(R.id.hyperCongra);
 		
 		mVideoView = (VideoView)findViewById(R.id.video);
 		mMediaController = new MediaController(this);

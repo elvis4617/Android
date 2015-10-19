@@ -61,7 +61,7 @@ public class MixedColorMenuActivity extends Activity implements OnClickListener 
 			}
 			break;
 		case R.id.data:
-			i = new Intent(this, /*Data_Set_Trials_Activity.class*/SetCongratulation.class);
+			i = new Intent(this, Data_Set_Trials_Activity.class);
 			break;
 		case R.id.options:
 			i = new Intent(this, Prefs.class);

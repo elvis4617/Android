@@ -8,13 +8,14 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.apache.commons.codec.binary.Base64;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -23,7 +24,6 @@ import android.graphics.Paint;
 import android.graphics.Paint.FontMetrics;
 import android.graphics.Paint.Style;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -33,9 +33,11 @@ import android.os.Message;
 import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import elvis.game.cognitive.dao.DBManager;
 import elvis.game.cognitive.data.ColorData;
 import elvis.game.cognitive.data.RectArea;
@@ -47,9 +49,9 @@ public class MixedColorView extends SurfaceView implements
 		SurfaceHolder.Callback {
 
 	private Context mContext;
-	private Handler mHandler;
 
 	private MixedThread mUIThread;
+	private Handler mHandler;
 
 	private Drawable mTimeTotalImage;
 	private Drawable mTimeExpendImage;
@@ -79,7 +81,7 @@ public class MixedColorView extends SurfaceView implements
 	private float rate;
 
 	private int[][] hyperSet;
-	private int[][] answerSet;
+	private int[][] answerSet = {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}};
 	
 	private int setCounter;
 	private int hyperCounter;
@@ -91,49 +93,78 @@ public class MixedColorView extends SurfaceView implements
 	
 	private int SET_NUMBER = 5;
 	
-	private SharedPreferences mSharedPreferences; 
+	private SharedPreferences mBaseSettings;
+	private SharedPreferences mGameSettings;
 
 
 	public MixedColorView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mContext = context;
 		SurfaceHolder holder = getHolder();
-		holder.addCallback(this);
+		holder.addCallback(this);;
 		mHandler = new Handler() {
-			@Override
 			public void handleMessage(Message m) {
+
+				LayoutInflater factory = LayoutInflater.from(mContext);
+				if(m.getData().getInt(MixedConstant.GAME_STATUS_COMPLETE_SET) == UIModel.GAME_STATUS_COMPLETE_SET){
+					View dialogView = factory.inflate(R.layout.congratulation,
+							null);
+					dialogView.setFocusableInTouchMode(true);
+					dialogView.requestFocus();
+	
+	
+					final AlertDialog dialog = new AlertDialog.Builder(mContext)
+							.setView(dialogView).create();
+					
+					dialog.show();
+					dialogView.findViewById(R.id.toNextHyper).setOnClickListener(
+							new OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									dialog.dismiss();
+									restartGame();
+								}
+							});
+	
+		
+					dialogView.findViewById(R.id.menu).setOnClickListener(
+							new OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									dialog.dismiss();
+									((MixedColorActivity) mContext).finish();
+								}
+							});
+				}
+
 			}
 		};
 		
-		mSharedPreferences = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, Context.MODE_PRIVATE); 
+		mBaseSettings = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, Context.MODE_PRIVATE); 
+		mGameSettings = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, Context.MODE_PRIVATE); 
 		
-		this.rate = 1;
+		this.rate = mBaseSettings.getFloat("rate", 1f);
 
 		hyperSet = new int[SET_NUMBER][2];
-		answerSet = new int[SET_NUMBER][2];
 		
-		if(mSharedPreferences.getBoolean(MixedConstant.PREFERENCE_KEY_SEQUENCE, true))
+		if(mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_SEQUENCE, true))
 			System.arraycopy(MixedConstant.HYPERSET1, 0, hyperSet, 0, SET_NUMBER);
 		else
 			System.arraycopy(MixedConstant.HYPERSET2, 0, hyperSet, 0, SET_NUMBER);
 		
-		for (int i = 0; i < SET_NUMBER; i++) {
-			answerSet[i][0] = -1;
-			answerSet[i][1] = -1;
-		}
 
 		initRes();
 		
 		mUIThread = new MixedThread(holder, context, mHandler);
 		
 		mgr = new DBManager(mContext);
-		this.orintation = orintation;
+		this.orintation = mBaseSettings.getInt("orientation", ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		
 		getObjectInfo();
 		
-		this.setCounter = setCounter;
-		this.hyperCounter = hyperCounter;
-		this.blockCounter = blockCounter;
+		this.setCounter = mGameSettings.getInt("setCounter", 0);
+		this.hyperCounter = mGameSettings.getInt("hyperCounter", 0);
+		this.blockCounter = mGameSettings.getInt("blockCounter", 0);
 		
 		
 		setFocusable(true);
@@ -188,8 +219,7 @@ public class MixedColorView extends SurfaceView implements
 
 	public void restartGame() {
 		Log.i("restart", "restart");
-		mUIThread = new MixedThread(this.getHolder(), this.getContext(),
-				mHandler);
+		mUIThread = new MixedThread(this.getHolder(), this.getContext(), mHandler);
 		mUIThread.initUIModel(mPaintArea);
 		mUIThread.setRunning(true);
 		mUIThread.start();
@@ -370,14 +400,16 @@ public class MixedColorView extends SurfaceView implements
 
 		private Context mContext;
 
+		private Handler mHandler;
+		
 		private boolean mRun = true;
 
 		private UIModel mUIModel;
 
-		public MixedThread(SurfaceHolder surfaceHolder, Context context,
-				Handler handler) {
+		public MixedThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
 			mSurfaceHolder = surfaceHolder;
 			mContext = context;
+			mHandler = handler;
 
 		}
 
@@ -407,30 +439,26 @@ public class MixedColorView extends SurfaceView implements
 					setCounter++;
 				}
 				
-				//Log.i("flag", flag+"");
 				if(flag == UIModel.GAME_STATUS_COMPLETE_SET){
-					Log.i("here", "here");
-					mRun = false;
-					clearSet(answerSet);
-					saveObject(timeRecorder);
-					/*restartGame();*/
+					Log.i("GAME_STATUS_COMPLETE_SET", "GAME_STATUS_COMPLETE_SET");
 					Log.i("timeRecorder", timeRecorder.toString());
 					Log.i("hyperCounter", hyperCounter+"s");
 					Log.i("SetCounter", setCounter+"s");
-					
-					
-					Intent i = new Intent(mContext, SetCongratulation.class);
+
+					Message message = new Message();
 					Bundle bundle = new Bundle();
-					bundle.putString("blockCounter", blockCounter+"");
-					bundle.putString("hyperCounter", hyperCounter+"");
-					bundle.putString("setCounter", setCounter+"");
-					i.putExtras(bundle);
+					bundle.putInt(MixedConstant.GAME_STATUS_COMPLETE_SET, UIModel.GAME_STATUS_COMPLETE_SET);
+					message.setData(bundle);
+					mHandler.sendMessage(message);
+					mRun = false;
+					clearSet(answerSet);
 					
-					mContext.startActivity(i);
+					hyperCounter++;
+					setCounter = 0;
 					
 				}
 				
-				if ((mSharedPreferences.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false) && flag == UIModel.EFFECT_FLAG_MISS ) || 
+				if ((mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false) && flag == UIModel.EFFECT_FLAG_MISS ) || 
 						flag == UIModel.EFFECT_FLAG_TIMEOUT) {
 					Log.i("flag miss || flag timeout", "flag miss || flag timeout");
 					mRun = false;
@@ -518,7 +546,7 @@ public class MixedColorView extends SurfaceView implements
 		}
 
 		public void initUIModel(RectArea paintArea) {
-			mUIModel = new UIModel(paintArea, orintation, timeRecorder, mSharedPreferences.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false));
+			mUIModel = new UIModel(paintArea, orintation, timeRecorder, mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false));
 			mUIModel.setHyperSet(hyperSet);
 			mUIModel.setAnswerSet(answerSet);
 			mUIModel.setMgr(mgr);

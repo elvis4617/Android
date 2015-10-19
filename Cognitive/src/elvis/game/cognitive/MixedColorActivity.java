@@ -26,6 +26,7 @@ import elvis.game.cognitive.utils.MixedConstant;
 
 public class MixedColorActivity extends Activity {
 
+	private SharedPreferences mBaseSettings;
 	private SharedPreferences mGameSettings;
 	private BroadcastReceiver mBatInfoReceiver;
 	
@@ -42,6 +43,7 @@ public class MixedColorActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 				WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -49,19 +51,10 @@ public class MixedColorActivity extends Activity {
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		mgr = new DBManager(this);
+		mBaseSettings = getSharedPreferences(
+				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, 0);
 		mGameSettings = getSharedPreferences(
-					MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, 0);
-		try{
-			String personBase64 = mGameSettings.getString("subjectBase64", ""); 
-			byte[] base64Bytes = Base64.decodeBase64(personBase64.getBytes()); 
-			ByteArrayInputStream bais = new ByteArrayInputStream(base64Bytes); 
-			ObjectInputStream ois = new ObjectInputStream(bais);  
-			subject = (TimeRecorder) ois.readObject();  
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-		
+				MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, 0);
 		
 		Bundle bundle = this.getIntent().getExtras();
 		
@@ -72,27 +65,31 @@ public class MixedColorActivity extends Activity {
 			hyperCounter= 0;
 			setCounter = 0;
 		}else{
-			blockCounter = bundle.getString("blockCounter") == null ? 0 : Integer.parseInt(bundle.getString("blockCounter"));
-			hyperCounter = bundle.getString("hyperCounter") == null ? 0 : Integer.parseInt(bundle.getString("hyperCounter"));
-			setCounter = bundle.getString("setCounter") == null ? 0 : Integer.parseInt(bundle.getString("setCounter"));
+			blockCounter = /*bundle.getString("blockCounter") == null ? 0 : */Integer.parseInt(bundle.getString("blockCounter"));
+			hyperCounter = /*bundle.getString("hyperCounter") == null ? 0 : */Integer.parseInt(bundle.getString("hyperCounter"));
+			setCounter = /*bundle.getString("setCounter") == null ? 0 : */Integer.parseInt(bundle.getString("setCounter"));
 		}
-		
-		Log.i("hyper number", hyperCounter+"");
 		
 		WindowManager windowManager = getWindowManager();
 		Display display = windowManager.getDefaultDisplay();
 		int screenWidth = display.getWidth();
 		int screenHeight = display.getHeight();
 		float rate = /*screenWidth / 800*/1f;
+		mBaseSettings.edit().putFloat("rate", rate).commit();
+		
 		
 		if (screenWidth > screenHeight) {  
 		      orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;  
 		} else {  
 			orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;  
 		}  
+		mBaseSettings.edit().putInt("orientation", orientation).commit();
+		mGameSettings.edit().putInt("blockCounter", blockCounter).commit();
+		mGameSettings.edit().putInt("hyperCounter", hyperCounter).commit();
+		mGameSettings.edit().putInt("setCounter", setCounter).commit();
 		
-		//final MixedColorView view = new MixedColorView(MixedColorActivity.this, rate, orientation, blockCounter, hyperCounter, setCounter);
 		setContentView(R.layout.game_layout/*view*/);
+		
 		//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
 		
 		mgr.clear();
