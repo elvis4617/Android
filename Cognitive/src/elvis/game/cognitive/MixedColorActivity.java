@@ -1,25 +1,42 @@
 package elvis.game.cognitive;
 
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
+
+import org.apache.commons.codec.binary.Base64;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
+import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import elvis.game.cognitive.dao.DBManager;
-import elvis.game.cognitive.data.Trials;
+import elvis.game.cognitive.data.TimeRecorder;
+import elvis.game.cognitive.utils.MixedConstant;
 
 public class MixedColorActivity extends Activity {
 
-	private DBManager mgr;
+	private SharedPreferences mGameSettings;
 	private BroadcastReceiver mBatInfoReceiver;
+	
+	private DBManager mgr;
+	
 	private int orientation;
+	private int blockCounter;
+	private int hyperCounter;
+	private int setCounter;
+	
+	private TimeRecorder subject;
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -32,9 +49,35 @@ public class MixedColorActivity extends Activity {
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		mgr = new DBManager(this);
+		mGameSettings = getSharedPreferences(
+					MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, 0);
+		try{
+			String personBase64 = mGameSettings.getString("subjectBase64", ""); 
+			byte[] base64Bytes = Base64.decodeBase64(personBase64.getBytes()); 
+			ByteArrayInputStream bais = new ByteArrayInputStream(base64Bytes); 
+			ObjectInputStream ois = new ObjectInputStream(bais);  
+			subject = (TimeRecorder) ois.readObject();  
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		
-		Intent i = getIntent();
-		String name = i.getStringExtra("subject");
+		
+		
+		Bundle bundle = this.getIntent().getExtras();
+		
+		Log.i("bundle", (bundle == null)+"");
+		
+		if(bundle == null){
+			blockCounter = 0;
+			hyperCounter= 0;
+			setCounter = 0;
+		}else{
+			blockCounter = bundle.getString("blockCounter") == null ? 0 : Integer.parseInt(bundle.getString("blockCounter"));
+			hyperCounter = bundle.getString("hyperCounter") == null ? 0 : Integer.parseInt(bundle.getString("hyperCounter"));
+			setCounter = bundle.getString("setCounter") == null ? 0 : Integer.parseInt(bundle.getString("setCounter"));
+		}
+		
+		Log.i("hyper number", hyperCounter+"");
 		
 		WindowManager windowManager = getWindowManager();
 		Display display = windowManager.getDefaultDisplay();
@@ -42,19 +85,16 @@ public class MixedColorActivity extends Activity {
 		int screenHeight = display.getHeight();
 		float rate = /*screenWidth / 800*/1f;
 		
-		Log.i("width", screenWidth+"");
-		Log.i("height", display.getHeight()+"");
-		Log.i("rate", rate+"");
 		if (screenWidth > screenHeight) {  
 		      orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;  
 		} else {  
 			orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;  
 		}  
 		
-		final MixedColorView view = new MixedColorView(MixedColorActivity.this, rate, orientation, name);
-		Log.i("orientation", orientation+"");
-		setContentView(view);
+		//final MixedColorView view = new MixedColorView(MixedColorActivity.this, rate, orientation, blockCounter, hyperCounter, setCounter);
+		setContentView(R.layout.game_layout/*view*/);
 		//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
+		
 		mgr.clear();
 		
 		 final IntentFilter filter = new IntentFilter();  
@@ -79,8 +119,22 @@ public class MixedColorActivity extends Activity {
 		    };  
 		    
 		    registerReceiver(mBatInfoReceiver, filter);  
+		   
 	}
 	
+	
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		// TODO Auto-generated method stub
+		 if(keyCode == KeyEvent.KEYCODE_BACK){
+			   return true;
+		 }
+		return super.onKeyDown(keyCode, event);
+	}
+
+
+
 	@Override
 	protected void onResume() {  
 		orientation = ActivityInfo.SCREEN_ORIENTATION_USER;  
@@ -99,6 +153,7 @@ public class MixedColorActivity extends Activity {
 	@Override
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
+		Log.i("destrop", "destroy");
 		super.onDestroy();
 		mgr.closeDB();  
 	}

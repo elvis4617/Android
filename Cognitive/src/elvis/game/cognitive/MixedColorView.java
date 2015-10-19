@@ -1,11 +1,19 @@
 package elvis.game.cognitive;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.codec.binary.Base64;
+
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,12 +23,15 @@ import android.graphics.Paint;
 import android.graphics.Paint.FontMetrics;
 import android.graphics.Paint.Style;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -76,16 +87,15 @@ public class MixedColorView extends SurfaceView implements
 	
 	private DBManager mgr;
 	private int orintation;
-	private String name;
 	private TimeRecorder timeRecorder;
-	private Random mRan = new Random();
 	
-	private int BLOCK_NUMBER = 5;
-	private int HYPER_NUMBER = 5;
 	private int SET_NUMBER = 5;
+	
+	private SharedPreferences mSharedPreferences; 
 
-	public MixedColorView(Context context, float rate, int orintation, String name) {
-		super(context);
+
+	public MixedColorView(Context context, AttributeSet attrs) {
+		super(context, attrs);
 		mContext = context;
 		SurfaceHolder holder = getHolder();
 		holder.addCallback(this);
@@ -95,17 +105,19 @@ public class MixedColorView extends SurfaceView implements
 			}
 		};
 		
-		this.rate = rate;
+		mSharedPreferences = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, Context.MODE_PRIVATE); 
+		
+		this.rate = 1;
 
 		hyperSet = new int[SET_NUMBER][2];
 		answerSet = new int[SET_NUMBER][2];
-
+		
+		if(mSharedPreferences.getBoolean(MixedConstant.PREFERENCE_KEY_SEQUENCE, true))
+			System.arraycopy(MixedConstant.HYPERSET1, 0, hyperSet, 0, SET_NUMBER);
+		else
+			System.arraycopy(MixedConstant.HYPERSET2, 0, hyperSet, 0, SET_NUMBER);
+		
 		for (int i = 0; i < SET_NUMBER; i++) {
-			hyperSet[i][0] = mRan.nextInt(8) % (8 - 0 + 1) + 0;
-			hyperSet[i][1] = mRan.nextInt(8) % (8 - 0 + 1) + 0;
-			while (hyperSet[i][0] == hyperSet[i][1]) {
-				hyperSet[i][1] = mRan.nextInt(8) % (8 - 0 + 1) + 0;
-			}
 			answerSet[i][0] = -1;
 			answerSet[i][1] = -1;
 		}
@@ -114,21 +126,22 @@ public class MixedColorView extends SurfaceView implements
 		
 		mUIThread = new MixedThread(holder, context, mHandler);
 		
-		setCounter = 0;
-		hyperCounter = 0;
-		blockCounter = 0;
-		
 		mgr = new DBManager(mContext);
 		this.orintation = orintation;
-		this.name = name;
-		this.timeRecorder = new TimeRecorder(BLOCK_NUMBER, HYPER_NUMBER, SET_NUMBER);
-		timeRecorder.setSubjectID(name);
+		
+		getObjectInfo();
+		
+		this.setCounter = setCounter;
+		this.hyperCounter = hyperCounter;
+		this.blockCounter = blockCounter;
+		
 		
 		setFocusable(true);
 	}
 
 	@Override
 	public void draw(Canvas canvas) {
+		Log.i("draw", "draw");
 		super.draw(canvas);
 	}
 
@@ -144,16 +157,21 @@ public class MixedColorView extends SurfaceView implements
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
+		Log.i("surfaceCreated", "surfaceCreated");
+		mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
+				R.drawable.bg_game);
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
+		Log.i("surfaceDestroyed", "surfaceDestroyed");
 		boolean retry = true;
 		mUIThread.setRunning(false);
 		while (retry) {
 			try {
 				mUIThread.join();
 				retry = false;
+				if(!mBgImage.isRecycled()) mBgImage.recycle();
 			} catch (InterruptedException e) {
 				Log.d("", "Surface destroy failure:", e);
 			}
@@ -186,13 +204,12 @@ public class MixedColorView extends SurfaceView implements
 
 	@SuppressWarnings("deprecation")
 	private void initRes() {
-		mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
-				R.drawable.bg_game);
+		Log.i("init res", "init res");
 		mTimeTotalImage = mContext.getResources().getDrawable(
 				R.drawable.time_total);
 		mTimeExpendImage = mContext.getResources().getDrawable(
 				R.drawable.time_expend);
-
+		
 		mDataTypeface = Typeface.createFromAsset(getContext().getAssets(),
 				"fonts/halver.ttf");
 
@@ -299,6 +316,35 @@ public class MixedColorView extends SurfaceView implements
 				soundPool.load(getContext(), R.raw.timeout, 1));
 	}
 
+	private void saveObject(TimeRecorder subject) {  
+        SharedPreferences mSharedPreferences = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, Context.MODE_PRIVATE);  
+        try {  
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();  
+            ObjectOutputStream oos = new ObjectOutputStream(baos);  
+            oos.writeObject(subject);  
+  
+            String subjectBase64 = new String(Base64.encodeBase64(baos.toByteArray()));  
+            SharedPreferences.Editor editor = mSharedPreferences.edit();  
+            editor.putString("subjectBase64", subjectBase64);  
+            editor.commit();  
+        } catch (IOException e) {  
+            e.printStackTrace();  
+        }  
+    } 
+	
+	protected void getObjectInfo() {  
+        try {  
+            SharedPreferences mSharedPreferences = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, Context.MODE_PRIVATE);  
+            String personBase64 = mSharedPreferences.getString("subjectBase64", "");  
+            byte[] base64Bytes = Base64.decodeBase64(personBase64.getBytes());  
+            ByteArrayInputStream bais = new ByteArrayInputStream(base64Bytes);  
+            ObjectInputStream ois = new ObjectInputStream(bais);  
+            timeRecorder = (TimeRecorder) ois.readObject();  
+        } catch (Exception e) {  
+            e.printStackTrace();  
+        }  
+          
+    }  
 	
 	public MixedThread getmUIThread() {
 		return mUIThread;
@@ -341,7 +387,6 @@ public class MixedColorView extends SurfaceView implements
 				Canvas c = null;
 				int flag = 0;
 				try {
-					mUIModel.setTrialCounter(setCounter);
 					mUIModel.updateUIModel();
 					c = mSurfaceHolder.lockCanvas(null);
 					synchronized (mSurfaceHolder) {
@@ -358,22 +403,49 @@ public class MixedColorView extends SurfaceView implements
 					}
 				}
 				
+				if(flag == UIModel.EFFECT_FLAG_PASS){
+					setCounter++;
+				}
+				
 				//Log.i("flag", flag+"");
 				if(flag == UIModel.GAME_STATUS_COMPLETE_SET){
 					Log.i("here", "here");
 					mRun = false;
-					hyperCounter++;
-					setCounter = 0;
 					clearSet(answerSet);
-					restartGame();
+					saveObject(timeRecorder);
+					/*restartGame();*/
+					Log.i("timeRecorder", timeRecorder.toString());
+					Log.i("hyperCounter", hyperCounter+"s");
+					Log.i("SetCounter", setCounter+"s");
+					
+					
+					Intent i = new Intent(mContext, SetCongratulation.class);
+					Bundle bundle = new Bundle();
+					bundle.putString("blockCounter", blockCounter+"");
+					bundle.putString("hyperCounter", hyperCounter+"");
+					bundle.putString("setCounter", setCounter+"");
+					i.putExtras(bundle);
+					
+					mContext.startActivity(i);
+					
 				}
 				
-				if (flag == UIModel.EFFECT_FLAG_MISS || flag == UIModel.EFFECT_FLAG_TIMEOUT) {
-					Log.i("There", "There");
+				if ((mSharedPreferences.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false) && flag == UIModel.EFFECT_FLAG_MISS ) || 
+						flag == UIModel.EFFECT_FLAG_TIMEOUT) {
+					Log.i("flag miss || flag timeout", "flag miss || flag timeout");
 					mRun = false;
 					setCounter = 0;
 					clearSet(answerSet);
-					restartGame();
+					/*restartGame();*/
+					
+					Intent i = new Intent(mContext, Go.class);
+					saveObject(timeRecorder);
+					/*Bundle bundle = new Bundle();
+					bundle.putString("blockCounter", blockCounter+"");
+					bundle.putString("hyperCounter", hyperCounter+"");
+					bundle.putString("setCounter", setCounter+"");
+					i.putExtras(bundle);*/
+					mContext.startActivity(i);
 				}
 				
 				
@@ -446,7 +518,7 @@ public class MixedColorView extends SurfaceView implements
 		}
 
 		public void initUIModel(RectArea paintArea) {
-			mUIModel = new UIModel(paintArea, orintation, timeRecorder);
+			mUIModel = new UIModel(paintArea, orintation, timeRecorder, mSharedPreferences.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false));
 			mUIModel.setHyperSet(hyperSet);
 			mUIModel.setAnswerSet(answerSet);
 			mUIModel.setMgr(mgr);
@@ -487,7 +559,7 @@ public class MixedColorView extends SurfaceView implements
 				float streamVolumeMax = mgr
 						.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 				float volume = streamVolumeCurrent / streamVolumeMax * 0.5f;
-				soundPool.play(soundPoolMap.get(soundId), volume, volume, 1, 0,
+				soundPool.play(soundPoolMap.get(soundId%10), volume, volume, 1, 0,
 						1f);
 			} catch (Exception e) {
 				Log.d("PlaySounds", e.toString());

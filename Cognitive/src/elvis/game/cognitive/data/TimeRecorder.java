@@ -1,8 +1,12 @@
 package elvis.game.cognitive.data;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class TimeRecorder {
+public class TimeRecorder implements Serializable{
+
+	private static final long serialVersionUID = -6021316927784505448L;
+	
 	private String subjectID;
 	private int blockNumber;
 	private int hyperNumber;

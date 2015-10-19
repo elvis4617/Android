@@ -7,6 +7,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import elvis.game.cognitive.R;
 import elvis.game.cognitive.utils.MixedConstant;
 
@@ -26,6 +28,7 @@ public class Prefs extends Activity {
 
 		mBaseSettings = getSharedPreferences(
 				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, 0);
+		
 		CheckBox vibrateCheckbox = (CheckBox) findViewById(R.id.options_vibrate_checkbox);
 		vibrateCheckbox.setChecked(mBaseSettings.getBoolean(
 				MixedConstant.PREFERENCE_KEY_VIBRATE, true));
@@ -97,6 +100,60 @@ public class Prefs extends Activity {
 						}
 					}
 				});
+		
+		RadioGroup modeGroup = (RadioGroup)this.findViewById(R.id.modeRadioGroup);
+		
+		final RadioButton easy = (RadioButton)findViewById(R.id.radioEasy);
+		final RadioButton hard = (RadioButton)findViewById(R.id.radioHard);
+		
+		if(mBaseSettings.getBoolean(
+				MixedConstant.PREFERENCE_KEY_HARDMODE, false)) hard.setChecked(true);
+		else easy.setChecked(true);
+		
+		modeGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+
+			@Override
+			public void onCheckedChanged(RadioGroup group, int checkedId) {
+				int radioButtonId = group.getCheckedRadioButtonId();
+				RadioButton rb = (RadioButton) findViewById(radioButtonId);
+				if(rb.getText().equals("Easy Mode")){
+					mBaseSettings.edit().putBoolean(
+							MixedConstant.PREFERENCE_KEY_HARDMODE, false).commit();
+				}else if(rb.getText().equals("Hard Mode")){
+					mBaseSettings.edit().putBoolean(
+							MixedConstant.PREFERENCE_KEY_HARDMODE, true).commit();
+				}
+				
+			}
+			
+		});
+		
+		RadioGroup sequanceGroup = (RadioGroup)this.findViewById(R.id.sequanceRadioGroup);
+		
+		final RadioButton s1 = (RadioButton)findViewById(R.id.radioSet1);
+		final RadioButton s2 = (RadioButton)findViewById(R.id.radioSet2);
+		
+		if(mBaseSettings.getBoolean(
+				MixedConstant.PREFERENCE_KEY_SEQUENCE, true)) s1.setChecked(true);
+		else s2.setChecked(true);
+		
+		sequanceGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+
+			@Override
+			public void onCheckedChanged(RadioGroup group, int checkedId) {
+				int radioButtonId = group.getCheckedRadioButtonId();
+				RadioButton rb = (RadioButton) findViewById(radioButtonId);
+				if(rb.getText().equals("Sequance 1")){
+					mBaseSettings.edit().putBoolean(
+							MixedConstant.PREFERENCE_KEY_SEQUENCE, true).commit();
+				}else if(rb.getText().equals("Sequance 2")){
+					mBaseSettings.edit().putBoolean(
+							MixedConstant.PREFERENCE_KEY_SEQUENCE, false).commit();
+				}
+				
+			}
+			
+		});
 
 	}
 

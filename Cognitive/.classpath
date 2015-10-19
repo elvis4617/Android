@@ -11,5 +11,7 @@
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Elvis/Desktop/commons/commons-codec-1.10.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

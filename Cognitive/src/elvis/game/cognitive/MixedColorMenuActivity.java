@@ -40,6 +40,7 @@ public class MixedColorMenuActivity extends Activity implements OnClickListener 
 
 		mBaseSettings = getSharedPreferences(
 				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, 0);
+		
 	}
 
 	@Override
@@ -56,11 +57,11 @@ public class MixedColorMenuActivity extends Activity implements OnClickListener 
 					true)) {
 				i = new Intent(this, TipsActivity.class);
 			} else {
-				i = new Intent(this, MixedColorActivity.class);
+				i = new Intent(this, Go.class);
 			}
 			break;
 		case R.id.data:
-			i = new Intent(this, Data_Set_Trials_Activity.class);
+			i = new Intent(this, /*Data_Set_Trials_Activity.class*/SetCongratulation.class);
 			break;
 		case R.id.options:
 			i = new Intent(this, Prefs.class);

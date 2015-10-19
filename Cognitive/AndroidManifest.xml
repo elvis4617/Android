@@ -68,9 +68,11 @@
             android:label="@string/title_activity_data__mv_t__trials_" >
         </activity>
          <activity android:name=".Go"
-             android:windowSoftInputMode="adjustUnspecified|stateHidden">
+             android:windowSoftInputMode="adjustUnspecified|stateHidden"> </activity>
             
-        </activity>
+        <activity android:name=".SetCongratulation"
+             android:windowSoftInputMode="adjustUnspecified|stateHidden"> </activity>
+   
     </application>
 	
     

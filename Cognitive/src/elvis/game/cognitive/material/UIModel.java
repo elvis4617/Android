@@ -67,7 +67,6 @@ public class UIModel {
 	private long mvT[];
 	
 	private DBManager mgr;
-	private int trialCounter;
 
 	private TimeRecorder timeRecorder;
 	
@@ -75,8 +74,6 @@ public class UIModel {
 
 	private int mSetCounter;
 	private int mSetNumber;
-	private int mHyperCounter;
-	private int mBlockCounter;
 
 	private long mTimeLogger;
 
@@ -87,6 +84,8 @@ public class UIModel {
 	private int col1, col2, col3;
 	private int row0, row1, row2;
 
+	private boolean hardMode;
+	
 	public synchronized void updateUIModel() {
 		long curTimeMillis = System.currentTimeMillis();
 		mStageTime += curTimeMillis - mTimeLogger;
@@ -166,8 +165,13 @@ public class UIModel {
 	}
 
 	public void checkSelection(int x, int y) {
-		Log.i("setCounter", mSetCounter+"");
 		int gridNumber = getGrid(x, y);
+		Log.i("gridNumber", gridNumber+"");
+		if(hardMode && (gridNumber != hyperSet[mSetCounter][0] && gridNumber != hyperSet[mSetCounter][1])){
+			mEffectFlag = EFFECT_FLAG_MISS;
+			return;
+		}
+		
 		if (answerSet[mSetCounter][0] == -1
 				&& answerSet[mSetCounter][1] == -1) {
 			
@@ -352,11 +356,6 @@ public class UIModel {
 	public void setMgr(DBManager mgr) {
 		this.mgr = mgr;
 	}
-
-	public void setTrialCounter(int trialCounter) {
-		this.trialCounter = trialCounter;
-	}
-	
 	
 	public int getmStageCounter() {
 		return mSetCounter;
@@ -366,7 +365,7 @@ public class UIModel {
 		this.mSetCounter = mStageCounter;
 	}
 
-	public UIModel(RectArea canvasArea, int orintation, TimeRecorder subject) {
+	public UIModel(RectArea canvasArea, int orintation, TimeRecorder subject, boolean hardmode) {
 		
 		this.timeRecorder = subject;
 		mCanvasArea = canvasArea;
@@ -439,5 +438,6 @@ public class UIModel {
 		row2 = 570;
 		
 		mSetNumber = 5;
+		this.hardMode = hardmode;
 	}
 }
