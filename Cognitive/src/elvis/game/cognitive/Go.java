@@ -56,10 +56,15 @@ public class Go extends Activity implements OnClickListener {
 	@Override
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
+		Log.i("Go destroy", "destroy");
 		super.onDestroy();
 		mGameSettings.edit().putString("subjectBase64", "").commit();
+		mGameSettings.edit().putInt("blockCounter", 0).commit();
+		mGameSettings.edit().putInt("hyperCounter", 0).commit();
+		mGameSettings.edit().putInt("setCounter", 0).commit();
 	}
 
+	
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
@@ -80,6 +85,7 @@ public class Go extends Activity implements OnClickListener {
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		// TODO Auto-generated method stub
 		 if(keyCode == KeyEvent.KEYCODE_BACK){
+			 onDestroy();
 			 startActivity(new Intent(this, MixedColorMenuActivity.class));
 			 return true;
 		 }

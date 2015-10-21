@@ -21,7 +21,7 @@ public class UIModel {
 
 	public static final int GAME_ATTRIBUTE_LEAST_COLOR = 9;
 	public static final int GAME_ATTRIBUTE_TOTAL_STAGE = 5;
-	public static final long GAME_ATTRIBUTE_MAX_TIME_PER_STAGE = 15000;
+	public static final long GAME_ATTRIBUTE_MAX_TIME_PER_CLICK = 15000;
 	public static final int GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT = 3;
 	public static final int TOTAL_GRID_AMOUNT = GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT
 			* GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT;
@@ -73,6 +73,7 @@ public class UIModel {
 	private int mEffectFlag;
 
 	private int mSetCounter;
+	private int mHyperCounter;
 	private int mSetNumber;
 
 	private long mTimeLogger;
@@ -97,7 +98,7 @@ public class UIModel {
 				chT[mStageCounter] = mStageTime;
 		}*/
 		
-		if (mStageTime >= GAME_ATTRIBUTE_MAX_TIME_PER_STAGE) {
+		if (mStageTime >= GAME_ATTRIBUTE_MAX_TIME_PER_CLICK) {
 			/*Log.i("time out", "time out");
 			Log.i("stage counter", mStageCounter+"");
 			mEffectFlag = EFFECT_FLAG_TIMEOUT;
@@ -115,8 +116,8 @@ public class UIModel {
 	}
 
 	public synchronized void buildStage() {
-		mTotalTime += (mStageTime < GAME_ATTRIBUTE_MAX_TIME_PER_STAGE) ? mStageTime
-				: GAME_ATTRIBUTE_MAX_TIME_PER_STAGE;
+		mTotalTime += (mStageTime < GAME_ATTRIBUTE_MAX_TIME_PER_CLICK) ? mStageTime
+				: GAME_ATTRIBUTE_MAX_TIME_PER_CLICK;
 		mSetCounter++;
 		if (mSetCounter < GAME_ATTRIBUTE_TOTAL_STAGE) {
 			buildPaintArea(GAME_ATTRIBUTE_LEAST_COLOR);
@@ -178,9 +179,14 @@ public class UIModel {
 			if (gridNumber == hyperSet[mSetCounter][0]) {
 				answerSet[mSetCounter][0] = gridNumber;
 				mEffectFlag = EFFECT_FLAG_PASS_FIRST;
+				mStageTime = 0;
+				mTimeLogger = System.currentTimeMillis();
+				
 			} else if (gridNumber == hyperSet[mSetCounter][1]) {
 				answerSet[mSetCounter][1] = gridNumber;
 				mEffectFlag = EFFECT_FLAG_PASS_FIRST;
+				mStageTime = 0;
+				mTimeLogger = System.currentTimeMillis();
 			} else{
 				mEffectFlag = EFFECT_FLAG_MISS;
 				//dao
@@ -302,7 +308,7 @@ public class UIModel {
 	}
 
 	public float getTimePercent() {
-		return 1 - (float) mStageTime / GAME_ATTRIBUTE_MAX_TIME_PER_STAGE;
+		return 1 - (float) mStageTime / GAME_ATTRIBUTE_MAX_TIME_PER_CLICK;
 	}
 
 	public float getFinalRecord() {

@@ -1,7 +1,9 @@
 package elvis.game.cognitive;
 
+import elvis.game.cognitive.utils.MixedConstant;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
@@ -19,10 +21,11 @@ import android.widget.VideoView;
 
 public class SetCongratulation extends Activity implements OnClickListener, OnErrorListener, OnCompletionListener{
 
-	private Button toNextHyper;
+	private Button toNextBlock;
 	private TextView congra;
 	private VideoView mVideoView;
 	private MediaController mMediaController;
+	private SharedPreferences mGameSettings;
 	
 	private Uri mUri;
     private int mPositionWhenPaused = -1;
@@ -39,18 +42,21 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		
+		mGameSettings = getSharedPreferences(
+				MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, 0);
+		
 		setContentView(R.layout.set_congratulation);
 		
-		Bundle bundle = this.getIntent().getExtras();
+		/*Bundle bundle = this.getIntent().getExtras();
 		
 		blockCounter = Integer.parseInt(bundle.getString("blockCounter"));
 		hyperCounter = Integer.parseInt(bundle.getString("hyperCounter"));
-		setCounter = Integer.parseInt(bundle.getString("setCounter"));
+		setCounter = Integer.parseInt(bundle.getString("setCounter"));*/
 /*		Log.i("text set", bundle.getString("setCounter"));
 		Log.i("text block", bundle.getString("blockCounter"));
 		*/
-		toNextHyper = (Button) findViewById(R.id.toNextHyper);
-		toNextHyper.setOnClickListener(this);
+		toNextBlock = (Button) findViewById(R.id.toNextBlock);
+		toNextBlock.setOnClickListener(this);
 		
 		congra = (TextView) findViewById(R.id.hyperCongra);
 		
@@ -60,16 +66,18 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
         
         mUri = Uri.parse("android.resource://elvis.game.cognitive/" + R.raw.movie_01);
         
-        mVideoView.setVisibility(VideoView.GONE);
 		/*Log.i("set number congra", setCounter+"");*/
-        if(blockCounter == 4 && hyperCounter == 4){
+        /*if(blockCounter == 4 && hyperCounter == 4){
         	Log.i("first", "first");
         	congra.setText("Congratulation, You secceed!");
         }else if(hyperCounter == 4) {
-        	Log.i("Second", "Second");
+        	Log.i("Second", "Second");*/
+        blockCounter = mGameSettings.getInt("blockCounter", 0);
 			mVideoView.setVisibility(VideoView.VISIBLE);
 			congra.setText("final congratulation");
-			blockCounter++;
+			if(blockCounter == MixedConstant.BLOCK_NUMBER)
+				congra.setText("finished experimence");
+			/*blockCounter++;
 			hyperCounter = 0;
 			setCounter = 0;
 		}else if(setCounter == 4) {
@@ -77,31 +85,24 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
 			congra.setText("congratulation");
 			hyperCounter++;
 			setCounter = 0;
-		}
+		}*/
 		
-		Log.i("hyper number congra", hyperCounter+"");
-		Log.i("block number congra", blockCounter+"");
+		/*Log.i("hyper number congra", hyperCounter+"");
+		Log.i("block number congra", blockCounter+"");*/
 		
 	}
 
 	@Override
 	public void onClick(View v) {
-		if(blockCounter == 4 && hyperCounter == 4){
+		/*if(blockCounter == 4 && hyperCounter == 4){
 			//final complete activity request
 			Intent i = new Intent(this, MixedColorMenuActivity.class);
 			startActivity(i);
-		}else{
-			Intent i = new Intent(this, MixedColorActivity.class);
-			Bundle bundle = new Bundle();
-			bundle.putString("blockCounter", blockCounter+"");
-			bundle.putString("hyperCounter", hyperCounter+"");
-			bundle.putString("setCounter", setCounter+"");
-			i.putExtras(bundle);
-			
-			mVideoView.setVisibility(VideoView.GONE);
-			startActivity(i);
-		}
-		
+		}else{*/
+		Intent i;
+		if(blockCounter == MixedConstant.BLOCK_NUMBER) i = new Intent(this, Go.class);		
+		else i = new Intent(this, MixedColorActivity.class);		
+		startActivity(i);
 	}
 	
 
@@ -114,7 +115,7 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
 	protected void onStart() {
 		// TODO Auto-generated method stub
 		mVideoView.setVideoURI(mUri);
-        /*mVideoView.start();*/
+        mVideoView.start();
  
 		super.onStart();
 	}

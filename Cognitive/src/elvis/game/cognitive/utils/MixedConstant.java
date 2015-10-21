@@ -25,6 +25,10 @@ public class MixedConstant {
 	
 	public static final String GAME_STATUS_COMPLETE_SET = "GAME_STATUS_COMPLETE_SET";
 	
+	public static final int BLOCK_NUMBER = 5;
+	public static final int HYPER_NUMBER = 5; 
+	public static final int SET_NUMBER = 5; 
+	
 	
 	
 	public static final int[][] HYPERSET1 = {{0,1}, {1,2}, {2,3}, {3,4}, {4,5}};

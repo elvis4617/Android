@@ -38,6 +38,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
 import elvis.game.cognitive.dao.DBManager;
 import elvis.game.cognitive.data.ColorData;
 import elvis.game.cognitive.data.RectArea;
@@ -76,8 +77,6 @@ public class MixedColorView extends SurfaceView implements
 	private Paint mGameMsgRightPaint;
 	private Paint mGameMsgLeftPaint;
 
-	@SuppressWarnings("unused")
-	private Typeface mDataTypeface;
 	private float rate;
 
 	private int[][] hyperSet;
@@ -115,7 +114,7 @@ public class MixedColorView extends SurfaceView implements
 	
 					final AlertDialog dialog = new AlertDialog.Builder(mContext)
 							.setView(dialogView).create();
-					
+					dialog.setCancelable(false);
 					dialog.show();
 					dialogView.findViewById(R.id.toNextHyper).setOnClickListener(
 							new OnClickListener() {
@@ -165,7 +164,7 @@ public class MixedColorView extends SurfaceView implements
 		this.setCounter = mGameSettings.getInt("setCounter", 0);
 		this.hyperCounter = mGameSettings.getInt("hyperCounter", 0);
 		this.blockCounter = mGameSettings.getInt("blockCounter", 0);
-		
+		Log.i("initial block counter", blockCounter+"");
 		
 		setFocusable(true);
 	}
@@ -239,9 +238,6 @@ public class MixedColorView extends SurfaceView implements
 				R.drawable.time_total);
 		mTimeExpendImage = mContext.getResources().getDrawable(
 				R.drawable.time_expend);
-		
-		mDataTypeface = Typeface.createFromAsset(getContext().getAssets(),
-				"fonts/halver.ttf");
 
 		mSrcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		mSrcPaint.setColor(Color.parseColor("#AAC1CDC1"));
@@ -439,24 +435,37 @@ public class MixedColorView extends SurfaceView implements
 					setCounter++;
 				}
 				
+				
 				if(flag == UIModel.GAME_STATUS_COMPLETE_SET){
 					Log.i("GAME_STATUS_COMPLETE_SET", "GAME_STATUS_COMPLETE_SET");
 					Log.i("timeRecorder", timeRecorder.toString());
+					Log.i("blockCounter", blockCounter+"s");
 					Log.i("hyperCounter", hyperCounter+"s");
 					Log.i("SetCounter", setCounter+"s");
-
-					Message message = new Message();
-					Bundle bundle = new Bundle();
-					bundle.putInt(MixedConstant.GAME_STATUS_COMPLETE_SET, UIModel.GAME_STATUS_COMPLETE_SET);
-					message.setData(bundle);
-					mHandler.sendMessage(message);
-					mRun = false;
-					clearSet(answerSet);
 					
 					hyperCounter++;
+					mRun = false;
+					clearSet(answerSet);
 					setCounter = 0;
+
+					if(hyperCounter < MixedConstant.BLOCK_NUMBER){
+						Message message = new Message();
+						Bundle bundle = new Bundle();
+						bundle.putInt(MixedConstant.GAME_STATUS_COMPLETE_SET, UIModel.GAME_STATUS_COMPLETE_SET);
+						message.setData(bundle);
+						mHandler.sendMessage(message);
+					}else{
+						hyperCounter = 0;
+						blockCounter++;
+						mGameSettings.edit().putInt("blockCounter", blockCounter).commit();
+						Log.i("Block Counter", blockCounter+"");
+						Intent i = new Intent(mContext, SetCongratulation.class);
+						mContext.startActivity(i);
+					}
+					
 					
 				}
+				
 				
 				if ((mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false) && flag == UIModel.EFFECT_FLAG_MISS ) || 
 						flag == UIModel.EFFECT_FLAG_TIMEOUT) {
@@ -603,5 +612,6 @@ public class MixedColorView extends SurfaceView implements
 		}
 		
 	}// Thread
+	
 
 }

@@ -1,10 +1,5 @@
 package elvis.game.cognitive;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
-
-import org.apache.commons.codec.binary.Base64;
-
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -17,20 +12,23 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
+import android.widget.Button;
 import elvis.game.cognitive.dao.DBManager;
 import elvis.game.cognitive.data.TimeRecorder;
 import elvis.game.cognitive.utils.MixedConstant;
 
-public class MixedColorActivity extends Activity {
+public class MixedColorActivity extends Activity implements OnClickListener{
 
 	private SharedPreferences mBaseSettings;
 	private SharedPreferences mGameSettings;
 	private BroadcastReceiver mBatInfoReceiver;
 	
 	private DBManager mgr;
+	private Button backToMenu;
 	
 	private int orientation;
 	private int blockCounter;
@@ -84,9 +82,6 @@ public class MixedColorActivity extends Activity {
 			orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;  
 		}  
 		mBaseSettings.edit().putInt("orientation", orientation).commit();
-		mGameSettings.edit().putInt("blockCounter", blockCounter).commit();
-		mGameSettings.edit().putInt("hyperCounter", hyperCounter).commit();
-		mGameSettings.edit().putInt("setCounter", setCounter).commit();
 		
 		setContentView(R.layout.game_layout/*view*/);
 		
@@ -116,7 +111,8 @@ public class MixedColorActivity extends Activity {
 		    };  
 		    
 		    registerReceiver(mBatInfoReceiver, filter);  
-		   
+		    backToMenu = (Button) findViewById(R.id.BackToMenu);
+		    backToMenu.setOnClickListener(this);
 	}
 	
 	
@@ -150,7 +146,7 @@ public class MixedColorActivity extends Activity {
 	@Override
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
-		Log.i("destrop", "destroy");
+		Log.i("Mixed Color A destrop", "destroy");
 		super.onDestroy();
 		mgr.closeDB();  
 	}
@@ -164,5 +160,11 @@ public class MixedColorActivity extends Activity {
 	public void onConfigurationChanged(Configuration newConfig) {  
 			super.onConfigurationChanged(newConfig);  
 			this.setRequestedOrientation(orientation);  
+	}
+
+	@Override
+	public void onClick(View v) {
+		Log.i("OnClick", "OnClick");
+		 startActivity(new Intent(this, MixedColorMenuActivity.class));
 	}  
 }
