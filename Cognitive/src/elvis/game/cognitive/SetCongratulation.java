@@ -73,6 +73,7 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
         }else if(hyperCounter == 4) {
         	Log.i("Second", "Second");*/
         blockCounter = mGameSettings.getInt("blockCounter", 0);
+        //mGameSettings.edit().putInt("blockCounter", ++blockCounter).commit();
 			mVideoView.setVisibility(VideoView.VISIBLE);
 			congra.setText("final congratulation");
 			if(blockCounter == MixedConstant.BLOCK_NUMBER)
@@ -100,8 +101,14 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
 			startActivity(i);
 		}else{*/
 		Intent i;
-		if(blockCounter == MixedConstant.BLOCK_NUMBER) i = new Intent(this, Go.class);		
-		else i = new Intent(this, MixedColorActivity.class);		
+		if(blockCounter == MixedConstant.BLOCK_NUMBER) {
+			i = new Intent(this, Go.class);		
+			mGameSettings.edit().putString("subjectBase64", "").commit();
+			mGameSettings.edit().putInt("blockCounter", 0).commit();
+			mGameSettings.edit().putInt("hyperCounter", 0).commit();
+			mGameSettings.edit().putInt("setCounter", 0).commit();
+			
+		}else i = new Intent(this, MixedColorActivity.class);		
 		startActivity(i);
 	}
 	

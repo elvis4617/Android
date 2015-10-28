@@ -27,6 +27,10 @@ public class Go extends Activity implements OnClickListener {
 	private int HYPER_NUMBER = 5;
 	private int SET_NUMBER = 5;
 	
+	private int blockCounter;
+	private int hyperCounter;
+	private int setCounter;
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -36,14 +40,30 @@ public class Go extends Activity implements OnClickListener {
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		
 		setContentView(R.layout.go);
-		name = (EditText) findViewById(R.id.name);
-		go = (Button) findViewById(R.id.go_button);
-		go.setOnClickListener(this);
 		
 		mGameSettings = getSharedPreferences(
 				MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, 0);
 		mBaseSettings = getSharedPreferences(
 				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, 0);
+		
+		this.setCounter = mGameSettings.getInt("setCounter", 0);
+		this.hyperCounter = mGameSettings.getInt("hyperCounter", 0);
+		this.blockCounter = mGameSettings.getInt("blockCounter", 0);
+		
+		name = (EditText) findViewById(R.id.name);
+		go = (Button) findViewById(R.id.go_button);
+		go.setOnClickListener(this);
+		
+		if(blockCounter == 0)
+			this.getWindow().getDecorView().setBackgroundDrawable(getResources().getDrawable(R.drawable.settingrain1));
+		else if(blockCounter == 1)
+			this.getWindow().getDecorView().setBackgroundDrawable(getResources().getDrawable(R.drawable.settingfood1));
+		else if(blockCounter == 2)
+			this.getWindow().getDecorView().setBackgroundDrawable(getResources().getDrawable(R.drawable.settingfriend1));
+		else if(blockCounter == 3)
+			this.getWindow().getDecorView().setBackgroundDrawable(getResources().getDrawable(R.drawable.settingcold1));
+		else if(blockCounter == 4)
+			this.getWindow().getDecorView().setBackgroundDrawable(getResources().getDrawable(R.drawable.settinghome));
 		
 		
 		if(mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false) && !mGameSettings.getString("subjectBase64", "").equals("")){

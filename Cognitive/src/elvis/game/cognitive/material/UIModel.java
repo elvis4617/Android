@@ -21,7 +21,7 @@ public class UIModel {
 
 	public static final int GAME_ATTRIBUTE_LEAST_COLOR = 9;
 	public static final int GAME_ATTRIBUTE_TOTAL_STAGE = 5;
-	public static final long GAME_ATTRIBUTE_MAX_TIME_PER_CLICK = 15000;
+	public static final long GAME_ATTRIBUTE_MAX_TIME_PER_CLICK = 150000;
 	public static final int GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT = 3;
 	public static final int TOTAL_GRID_AMOUNT = GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT
 			* GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT;
@@ -141,10 +141,8 @@ public class UIModel {
 		List<Integer> paintPos = new ArrayList<Integer>();
 
 		for (int i = 0; i < colorAmount; i++) {
-				paintPos.add(i);
+				paintPos.add(0);
 		}
-
-		Collections.shuffle(paintPos);
 
 		int curColor;
 		ColorData curColorData;
@@ -256,6 +254,18 @@ public class UIModel {
 	
 		return row == -1 || col == -1 ? -1 : row * GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT + col;
 	}
+	
+	public int[] getGridLocation(int x){
+		int [] location = new int[2];
+		location[0] = 260+(x%3)*gridSize+ (x%3)* UI_ATTRIBUTE_INNER_PADDING_X;
+		location[1] = 170+(x/3)*gridSize+ (x/3)* UI_ATTRIBUTE_TARGET_CELL_Y_MARGIN_LANDSCAPE;
+		return location;
+	}
+	
+	public int getGridSize(){
+		return gridSize;
+	}
+
 
 	public RectF getSrcPaintArea() {
 		return mSrcPaintArea.getRectF();

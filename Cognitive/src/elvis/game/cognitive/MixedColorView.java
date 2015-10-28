@@ -56,6 +56,10 @@ public class MixedColorView extends SurfaceView implements
 
 	private Drawable mTimeTotalImage;
 	private Drawable mTimeExpendImage;
+	private Drawable mCharacter;
+	private Drawable mGridChar;
+	private Drawable mDestination;
+	private Drawable mDialog;
 	private Bitmap mBgImage;
 
 	private RectArea mPaintArea;
@@ -94,6 +98,16 @@ public class MixedColorView extends SurfaceView implements
 	
 	private SharedPreferences mBaseSettings;
 	private SharedPreferences mGameSettings;
+	
+	private int charWidth = 0;
+	private int charHeight = 0;
+	private int destWidth = 0;
+	private int destHeight = 0;
+	
+	private int startXChar = 120;
+	private int startYChar = 30;
+	private int startXDest = 1000;
+	private int startYDest = 50;
 
 
 	public MixedColorView(Context context, AttributeSet attrs) {
@@ -110,7 +124,7 @@ public class MixedColorView extends SurfaceView implements
 							null);
 					dialogView.setFocusableInTouchMode(true);
 					dialogView.requestFocus();
-	
+					dialogView.setBackgroundDrawable(mDialog);
 	
 					final AlertDialog dialog = new AlertDialog.Builder(mContext)
 							.setView(dialogView).create();
@@ -152,6 +166,11 @@ public class MixedColorView extends SurfaceView implements
 			System.arraycopy(MixedConstant.HYPERSET2, 0, hyperSet, 0, SET_NUMBER);
 		
 
+		this.setCounter = mGameSettings.getInt("setCounter", 0);
+		this.hyperCounter = mGameSettings.getInt("hyperCounter", 0);
+		this.blockCounter = mGameSettings.getInt("blockCounter", 0);
+		Log.i("initial block counter", blockCounter+"");
+		
 		initRes();
 		
 		mUIThread = new MixedThread(holder, context, mHandler);
@@ -160,11 +179,6 @@ public class MixedColorView extends SurfaceView implements
 		this.orintation = mBaseSettings.getInt("orientation", ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		
 		getObjectInfo();
-		
-		this.setCounter = mGameSettings.getInt("setCounter", 0);
-		this.hyperCounter = mGameSettings.getInt("hyperCounter", 0);
-		this.blockCounter = mGameSettings.getInt("blockCounter", 0);
-		Log.i("initial block counter", blockCounter+"");
 		
 		setFocusable(true);
 	}
@@ -189,7 +203,23 @@ public class MixedColorView extends SurfaceView implements
 	public void surfaceCreated(SurfaceHolder holder) {
 		Log.i("surfaceCreated", "surfaceCreated");
 		mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
-				R.drawable.bg_game);
+				R.drawable.settingrain1);
+		if(blockCounter == 0){
+			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
+					R.drawable.settingrain1);
+		}else if(blockCounter == 1){
+			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
+					R.drawable.settingfood2);
+		}else if(blockCounter == 2){
+			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
+					R.drawable.settingfriend5);
+		}else if(blockCounter == 3){
+			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
+					R.drawable.settingcold2);
+		}else if(blockCounter == 4){
+			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
+					R.drawable.settinghome);
+		}
 	}
 
 	@Override
@@ -233,12 +263,39 @@ public class MixedColorView extends SurfaceView implements
 
 	@SuppressWarnings("deprecation")
 	private void initRes() {
-		Log.i("init res", "init res");
+		Log.i("initRes","initRes");
 		mTimeTotalImage = mContext.getResources().getDrawable(
 				R.drawable.time_total);
 		mTimeExpendImage = mContext.getResources().getDrawable(
 				R.drawable.time_expend);
 
+		if(blockCounter == 0) {
+			mCharacter = mContext.getResources().getDrawable(R.drawable.mainpablo);
+			mGridChar = mContext.getResources().getDrawable(R.drawable.rain_penguin);
+			mDestination = mContext.getResources().getDrawable(R.drawable.objectrain);
+			mDialog = mContext.getResources().getDrawable(R.drawable.goalrain);
+		}else if(blockCounter == 1){
+			mCharacter = mContext.getResources().getDrawable(R.drawable.rain_penguin);
+			mGridChar = mContext.getResources().getDrawable(R.drawable.goalfood1);
+			mDestination = mContext.getResources().getDrawable(R.drawable.objectfood);
+			mDialog = mContext.getResources().getDrawable(R.drawable.goalfood1);
+		}else if(blockCounter == 2){
+			mCharacter = mContext.getResources().getDrawable(R.drawable.gentleman_penguin);
+			mGridChar = mContext.getResources().getDrawable(R.drawable.gentleman_penguin);
+			mDestination = mContext.getResources().getDrawable(R.drawable.objectfriend2);
+			mDialog = mContext.getResources().getDrawable(R.drawable.goalfriend1);
+		}else if(blockCounter == 3){
+			mCharacter = mContext.getResources().getDrawable(R.drawable.gentleman_penguin);
+			mGridChar = mContext.getResources().getDrawable(R.drawable.goalcold2);
+			mDestination = mContext.getResources().getDrawable(R.drawable.objectcold2);
+			mDialog = mContext.getResources().getDrawable(R.drawable.goalcold1);
+		}else if(blockCounter == 4){
+			mCharacter = mContext.getResources().getDrawable(R.drawable.goalcold2);
+			mGridChar = mContext.getResources().getDrawable(R.drawable.pinga);
+			mDestination = mContext.getResources().getDrawable(R.drawable.objecthome);
+			mDialog = mContext.getResources().getDrawable(R.drawable.goalhome);
+		}
+		
 		mSrcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		mSrcPaint.setColor(Color.parseColor("#AAC1CDC1"));
 		mTarPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -261,68 +318,8 @@ public class MixedColorView extends SurfaceView implements
 		colorBgMap = new HashMap<Integer, Paint>();
 
 		Paint curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#F5ABC6"));// pink E91E63 light pink						
-		colorBgMap.put(0, curColor); // #F5ABC6
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#D6C6ED"));// indigo
-		colorBgMap.put(1, curColor);
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#F6C18D"));// yellow
-		colorBgMap.put(2, curColor);
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#E43172"));// red
-		colorBgMap.put(3, curColor);
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#8FDCB0"));// lime #8FDCB0
-		colorBgMap.put(4, curColor);
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#2196F3"));// blue
-		colorBgMap.put(5, curColor);
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#FF8000"));// orange
-		colorBgMap.put(6, curColor);
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#FF3399"));// darkpink
-		colorBgMap.put(7, curColor);
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#00BCD4"));// cyan
-		colorBgMap.put(8, curColor);
-		
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#34DCCD"));// light blue
-		colorBgMap.put(9, curColor);
-		
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#B2FF66"));// green	
-		colorBgMap.put(10, curColor);
-		
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#FFB266"));// light orange	
-		colorBgMap.put(11, curColor);
-		
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#00CC66"));// green blue		
-		colorBgMap.put(12, curColor);
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#B973FA"));// light purpal	
-		colorBgMap.put(13, curColor);
-		
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#F9A485"));// light pink
-		colorBgMap.put(14, curColor);
-
-		curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#FF3333"));// light red
-		colorBgMap.put(15, curColor);
+		curColor.setColor(Color.parseColor("#FFFFFF"));					
+		colorBgMap.put(0, curColor); 
 		
 		SharedPreferences baseSettings = mContext.getSharedPreferences(
 				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, 0);
@@ -491,11 +488,21 @@ public class MixedColorView extends SurfaceView implements
 
 		private void doDraw(Canvas canvas) {
 			canvas.drawBitmap(mBgImage, 0, 0, null);
-
-			UIModel uiModel = mUIModel;
 			
-			//canvas.drawRoundRect(uiModel.getSrcPaintArea(), 15, 15, mSrcPaint);
-			/*canvas.drawRoundRect(uiModel.getTarPaintArea(), 15, 15, mTarPaint);*/
+			int distance = ((1020+20)-(250-20))/MixedConstant.HYPER_NUMBER;
+			
+			canvas.drawLine((250-20)+ distance * hyperCounter, 90, 1020+20, 90, new Paint(Paint.ANTI_ALIAS_FLAG));
+			canvas.drawLine((250-20)+ distance * hyperCounter, 91, 1020+20, 91, new Paint(Paint.ANTI_ALIAS_FLAG));
+			
+			Paint circle_Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+			circle_Paint.setStyle(Style.FILL);
+			circle_Paint.setColor(Color.GRAY);
+			
+			for(int i = hyperCounter; i<= 5; i++){
+				canvas.drawCircle((250-20)+distance*i, 90, 6, circle_Paint);
+			}
+			
+			UIModel uiModel = mUIModel;
 
 			FontMetrics fmsr = mGameMsgLeftPaint.getFontMetrics();
 			canvas.drawText(uiModel.getStageText(), 5 * rate, 15 * rate
@@ -506,8 +513,68 @@ public class MixedColorView extends SurfaceView implements
 							(int) (15 * rate),
 							(int) (mPaintArea.mMaxX / 2 + 80 * rate),
 							(int) (25 * rate));
+			
+			
+			mCharacter.setBounds(80, 30, 180, 150);
+			mDestination.setBounds(950, 30, 1250, 150);
+			
+			if(blockCounter == 0){
+				charWidth = 120;
+				charHeight = 140;
+				
+				destWidth = 170;
+				destHeight = 659/(945/destWidth);
+				
+				startXChar = 120 + hyperCounter*distance;
+			}else if(blockCounter == 1){
+				charWidth = 120;
+				charHeight = 140;
+				
+				destWidth = 170;
+				destHeight = 262/(425/destWidth);
+				
+				startXChar = 120 + hyperCounter*distance;
+				
+			}
+			else if(blockCounter == 2){
+				charWidth = 120;
+				charHeight = 140;
+				
+				destWidth = 110;
+				destHeight = 2400/(2001/destWidth);
+				
+				startXChar = 120 + hyperCounter*distance;
+				startYDest = 20;
+				
+			}else if(blockCounter == 3){
+				charWidth = 120;
+				charHeight = 140;
+				
+				destWidth = 120;
+				destHeight = 600/(495/destWidth);
+				
+				startXChar = 120 + hyperCounter*distance;
+				startYDest = 20;
+				
+			}else if(blockCounter == 4){
+				charWidth = 120;
+				charHeight = 140;
+				
+				destWidth = 200;
+				destHeight = 226/(607/destWidth);
+				
+				startXChar = 120 + hyperCounter*distance;
+				startYDest = 40;
+				
+			}
+			
+			mCharacter.setBounds(startXChar, startYChar, startXChar+charWidth, startYChar+charHeight);
+			mDestination.setBounds(startXDest, startYDest, startXDest+destWidth, startYDest+destHeight);
+			
+			mCharacter.draw(canvas);
+			mDestination.draw(canvas);
 			mTimeTotalImage.draw(canvas);
-
+			
 			mTimeExpendImage.setBounds(
 					(int) (mPaintArea.mMaxX / 2 - 80 * rate),
 					(int) (15 * rate),
@@ -532,25 +599,34 @@ public class MixedColorView extends SurfaceView implements
 			List<ColorData> targetColors = uiModel.getTargetColor();
 			for (ColorData curColor : targetColors) {
 				Paint paint = colorBgMap.get(curColor.getMBgColor());
-				int color = paint.getColor();
+				paint.setStyle(Style.STROKE);
 				canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);
+				 
+				/*if(targetColors.indexOf(curColor) == firstPos ||
+						targetColors.indexOf(curColor) == secondPos){
+					
+				}else
+					canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);*/
 				
-				if ((firstAns != -1 && targetColors.indexOf(curColor) == firstPos)
-						|| (secondAns != -1 && targetColors.indexOf(curColor) == secondPos)) {
-					paint.setColor(Color.WHITE);
-					paint.setStyle(Style.STROKE);
-					paint.setStrokeWidth(5);
-					canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);
-				} else if (targetColors.indexOf(curColor) == firstPos
-						|| targetColors.indexOf(curColor) == secondPos) {
-					paint.setColor(Color.DKGRAY);
-					paint.setStyle(Style.STROKE);
-					paint.setStrokeWidth(5);
-					canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);
+				if (targetColors.indexOf(curColor) == firstPos && firstAns == -1) {
+					int [] location = mUIModel.getGridLocation(firstPos);
+					mGridChar.setBounds( location[0] + (mUIModel.getGridSize()-charWidth)/2,
+							location[1]+10,
+							location[0] + (mUIModel.getGridSize()-charWidth)/2 + charWidth, 
+							location[1]+mUIModel.getGridSize());
+					mGridChar.draw(canvas);
+				}
+				if(targetColors.indexOf(curColor) == secondPos && secondAns == -1){
+					int [] location = mUIModel.getGridLocation(secondPos);
+					mGridChar.setBounds( location[0] + (mUIModel.getGridSize()-charWidth)/2, 
+							location[1]+10,
+							location[0] + (mUIModel.getGridSize()-charWidth)/2 + charWidth, 
+							location[1]+mUIModel.getGridSize());
+					mGridChar.draw(canvas);
 				}
 				
-				paint.setColor(color);
-				paint.setStyle(Style.FILL);
+				/*paint.setColor(color);
+				paint.setStyle(Style.FILL);*/
 			}
 		}
 
