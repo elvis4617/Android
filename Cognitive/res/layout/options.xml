@@ -2,13 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@drawable/bg_game"
+    android:background="@drawable/bg_option"
     android:orientation="vertical" >
 
     <CheckBox
         android:id="@+id/options_vibrate_checkbox"
         android:layout_width="fill_parent"
         android:layout_height="50dip"
+        android:layout_marginStart="80dp"
+        android:layout_marginTop="50dp"
         android:text="@string/options_vibrate_summary"
         android:textColor="#FF000000" >
     </CheckBox>
@@ -17,29 +19,26 @@
         android:id="@+id/options_sounds_checkbox"
         android:layout_width="fill_parent"
         android:layout_height="50dip"
+        android:layout_marginStart="80dp"
         android:text="@string/options_sounds_summary"
         android:textColor="#FF000000" >
     </CheckBox>
 
     <CheckBox
-        android:id="@+id/options_showtips_checkbox"
+        android:id="@+id/debug"
         android:layout_width="fill_parent"
         android:layout_height="50dip"
-        android:text="@string/options_showtips_summary"
+        android:layout_marginStart="80dp"
+        android:text="@string/options_debug"
         android:textColor="#FF000000" >
     </CheckBox>
-
-    <!--
-         <CheckBox android:id="@+id/options_hardmode_checkbox"
-				android:layout_width="fill_parent" android:layout_height="50dip"
-				android:text="Hard Mode" android:textColor="#FF000000"></CheckBox>
-    -->
 
     <RadioGroup
         android:id="@+id/modeRadioGroup"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Mode"
+        android:layout_height="50dp"
+        android:layout_marginStart="80dp"
+        android:contentDescription="@string/mode"
         android:orientation="horizontal" >
 
         <RadioButton
@@ -47,7 +46,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="Easy Mode"
+            android:text="@string/easy_mode"
             android:textColor="#FF000000" >
         </RadioButton>
 
@@ -55,7 +54,8 @@
             android:id="@+id/radioHard"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hard Mode"
+            android:layout_marginStart="50dp" 
+            android:text="@string/hard_mode"
             android:textColor="#FF000000" >
         </RadioButton>
     </RadioGroup>
@@ -63,8 +63,9 @@
     <RadioGroup
         android:id="@+id/sequanceRadioGroup"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Set"
+        android:layout_height="50dp"
+        android:layout_marginStart="80dp"
+        android:contentDescription="@string/set"
         android:orientation="horizontal" >
 
         <RadioButton
@@ -72,7 +73,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="Sequance 1"
+            android:text="@string/sequence_1"
             android:textColor="#FF000000" >
         </RadioButton>
 
@@ -80,9 +81,17 @@
             android:id="@+id/radioSet2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sequance 2"
+             android:layout_marginStart="50dp"
+            android:text="@string/sequence_2"
             android:textColor="#FF000000" >
         </RadioButton>
     </RadioGroup>
+
+    <Button
+        android:id="@+id/clear_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="100dp"
+        android:text="@string/clear_data" />
 
 </LinearLayout>

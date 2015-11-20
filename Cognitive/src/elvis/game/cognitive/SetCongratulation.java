@@ -32,7 +32,6 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
     
 	private int blockCounter;
 	private int hyperCounter;
-	private int setCounter;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -47,14 +46,6 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
 		
 		setContentView(R.layout.set_congratulation);
 		
-		/*Bundle bundle = this.getIntent().getExtras();
-		
-		blockCounter = Integer.parseInt(bundle.getString("blockCounter"));
-		hyperCounter = Integer.parseInt(bundle.getString("hyperCounter"));
-		setCounter = Integer.parseInt(bundle.getString("setCounter"));*/
-/*		Log.i("text set", bundle.getString("setCounter"));
-		Log.i("text block", bundle.getString("blockCounter"));
-		*/
 		toNextBlock = (Button) findViewById(R.id.toNextBlock);
 		toNextBlock.setOnClickListener(this);
 		
@@ -63,33 +54,26 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
 		mVideoView = (VideoView)findViewById(R.id.video);
 		mMediaController = new MediaController(this);
         mVideoView.setMediaController(mMediaController);
-        
-        mUri = Uri.parse("android.resource://elvis.game.cognitive/" + R.raw.movie_01);
-        
-		/*Log.i("set number congra", setCounter+"");*/
-        /*if(blockCounter == 4 && hyperCounter == 4){
-        	Log.i("first", "first");
-        	congra.setText("Congratulation, You secceed!");
-        }else if(hyperCounter == 4) {
-        	Log.i("Second", "Second");*/
         blockCounter = mGameSettings.getInt("blockCounter", 0);
-        //mGameSettings.edit().putInt("blockCounter", ++blockCounter).commit();
-			mVideoView.setVisibility(VideoView.VISIBLE);
-			congra.setText("final congratulation");
-			if(blockCounter == MixedConstant.BLOCK_NUMBER)
-				congra.setText("finished experimence");
-			/*blockCounter++;
-			hyperCounter = 0;
-			setCounter = 0;
-		}else if(setCounter == 4) {
-			Log.i("third", "third");
-			congra.setText("congratulation");
-			hyperCounter++;
-			setCounter = 0;
-		}*/
+        
+        if(blockCounter == 1)
+        	mUri = Uri.parse("android.resource://elvis.game.cognitive/" + R.raw.movie_01);
+        else if(blockCounter == 2)
+        	mUri = Uri.parse("android.resource://elvis.game.cognitive/" + R.raw.movie_02);
+        else if(blockCounter == 3)
+        	mUri = Uri.parse("android.resource://elvis.game.cognitive/" + R.raw.movie_03);
+        else if(blockCounter == 4)
+        	mUri = Uri.parse("android.resource://elvis.game.cognitive/" + R.raw.movie_04);
+        else if(blockCounter == 5)
+        	mUri = Uri.parse("android.resource://elvis.game.cognitive/" + R.raw.movie_05);
+        
+		mVideoView.setVisibility(VideoView.VISIBLE);
+		congra.setText("final congratulation");
 		
-		/*Log.i("hyper number congra", hyperCounter+"");
-		Log.i("block number congra", blockCounter+"");*/
+		if(blockCounter == MixedConstant.BLOCK_NUMBER)
+			congra.setText("finished experimence");
+		
+		Log.i("block number congra", blockCounter+"");
 		
 	}
 
@@ -102,13 +86,16 @@ public class SetCongratulation extends Activity implements OnClickListener, OnEr
 		}else{*/
 		Intent i;
 		if(blockCounter == MixedConstant.BLOCK_NUMBER) {
-			i = new Intent(this, Go.class);		
+			i = new Intent(this, Go.class);	
+			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 			mGameSettings.edit().putString("subjectBase64", "").commit();
 			mGameSettings.edit().putInt("blockCounter", 0).commit();
 			mGameSettings.edit().putInt("hyperCounter", 0).commit();
 			mGameSettings.edit().putInt("setCounter", 0).commit();
 			
-		}else i = new Intent(this, MixedColorActivity.class);		
+		}else {
+			i = new Intent(this, MixedColorActivity.class);	
+		}
 		startActivity(i);
 	}
 	

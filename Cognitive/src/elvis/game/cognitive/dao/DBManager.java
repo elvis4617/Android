@@ -3,11 +3,10 @@ package elvis.game.cognitive.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import elvis.game.cognitive.data.Trials;
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import elvis.game.cognitive.data.TimeRecorder;
 
 public class DBManager {
 	private DatabaseHelper dbHelper;  
@@ -18,63 +17,60 @@ public class DBManager {
         db = dbHelper.getWritableDatabase();  
     }  
     
-    public void add(Trials trials) {  
+    public void add(TimeRecorder subject) {  
         db.beginTransaction();  
         try {   
-            db.execSQL("INSERT INTO trial VALUES(?, ?, ?, ?)", new Object[]{trials.getTrial(), trials.getSets(),trials.getChT(),trials.getMvT()});  
+            db.execSQL("INSERT INTO subjects VALUES(?, ?, ?, ?, ?, ?, ?, ?)", new Object[]{subject.getSubjectID(), subject.getBlockCounter(),
+            		subject.getHyperCounter(), subject.getHomeKeyTime(), subject.getSetCounter(), subject.getSetLedOn(), subject.getChT(), subject.getMvT()});  
             db.setTransactionSuccessful();  
         } finally {  
             db.endTransaction();  
         }  
     }
     
-    public void add(List<Trials> trials) {  
+   public void add(List<TimeRecorder> subjects) {  
         db.beginTransaction();  
         try {  
-            for (Trials trial : trials) {  
-                db.execSQL("INSERT INTO trial VALUES(?, ?, ?, ?)", new Object[]{trial.getTrial(), trial.getSets(),trial.getChT(),trial.getMvT()});  
-            }  
+            for (TimeRecorder subject : subjects)
+            	db.execSQL("INSERT INTO subjects VALUES(?, ?, ?, ?, ?, ?, ?, ?)", new Object[]{subject.getSubjectID(), subject.getBlockCounter(),
+                		subject.getHyperCounter(), subject.getHomeKeyTime(), subject.getSetCounter(), subject.getSetLedOn(), subject.getChT(), subject.getMvT()});  
             db.setTransactionSuccessful();  
         } finally {  
             db.endTransaction();  
         }  
     }
     
-    public void updateAge(Trials trials) {  
-        ContentValues cv = new ContentValues();  
-        cv.put("_Set", trials.getSets());  
-        cv.put("ChT", trials.getChT());
-        cv.put("MvT", trials.getMvT());
-        db.update("trial", cv, "Trial = ?", new String[]{trials.getTrial()+""});  
-    }  
-    
     public void clear() {  
-    	db.delete("trial", null, null);
+    	db.delete("subjects", null, null);
     }  
     
-    public List<Trials> query() {  
-        ArrayList<Trials> trials = new ArrayList<Trials>();  
-        Cursor c = queryTheCursor();  
+    public List<TimeRecorder> queryForSubjects(String subject_ID) {  
+        List<TimeRecorder> subjects = new ArrayList<TimeRecorder>();  
+        Cursor c = queryTheSubject(subject_ID);  
         while (c.moveToNext()) {  
-        	Trials trial = new Trials(
-        			c.getInt(c.getColumnIndex("Trial")),
-        			c.getInt(c.getColumnIndex("_Set")),
-        			c.getDouble(c.getColumnIndex("ChT")),
-        			c.getDouble(c.getColumnIndex("MvT"))
+        	TimeRecorder trial = new TimeRecorder(
+        			c.getString(c.getColumnIndex("subject_ID")),
+        			c.getString(c.getColumnIndex("home_Key_time")),
+        			c.getInt(c.getColumnIndex("block_Counter")),
+        			c.getInt(c.getColumnIndex("hyper_Counter")),
+        			c.getInt(c.getColumnIndex("set_Counter")),
+        			c.getString(c.getColumnIndex("set_led_on")),
+        			c.getInt(c.getColumnIndex("chT")),
+        			c.getInt(c.getColumnIndex("mvT"))
         			);   
-            trials.add(trial);  
+            subjects.add(trial);  
         }  
         c.close();  
-        return trials;  
+        return subjects;  
     }  
     
     public Cursor queryTheCursor() {  
-        Cursor c = db.rawQuery("SELECT * FROM trial", null);  
+        Cursor c = db.rawQuery("SELECT * FROM subjects", null);  
         return c;  
     }  
     
-    public Cursor queryTheTrial(String trial) {  
-        Cursor c = db.rawQuery("SELECT * FROM trial where Trial = ?", new String[]{trial});  
+    public Cursor queryTheSubject(String subject_ID) {  
+        Cursor c = db.rawQuery("SELECT * FROM subjects where subject_ID = ? order by set_led_on ASC", new String[]{subject_ID});  
         return c;  
     }  
     
@@ -82,19 +78,23 @@ public class DBManager {
         db.close();  
     }
 
-	public List<Trials> queryForTrial(String trialNum) {
-		ArrayList<Trials> trials = new ArrayList<Trials>();  
-        Cursor c = queryTheTrial(trialNum);  
+    public List<TimeRecorder> queryAll() {  
+        List<TimeRecorder> subjects = new ArrayList<TimeRecorder>();  
+        Cursor c = queryTheCursor();  
         while (c.moveToNext()) {  
-        	Trials trial = new Trials(
-        			c.getInt(c.getColumnIndex("Trial")),
-        			c.getInt(c.getColumnIndex("_Set")),
-        			c.getDouble(c.getColumnIndex("ChT")),
-        			c.getDouble(c.getColumnIndex("MvT"))
+        	TimeRecorder trial = new TimeRecorder(
+        			c.getString(c.getColumnIndex("subject_ID")),
+        			c.getString(c.getColumnIndex("home_Key_time")),
+        			c.getInt(c.getColumnIndex("block_Counter")),
+        			c.getInt(c.getColumnIndex("hyper_Counter")),
+        			c.getInt(c.getColumnIndex("set_Counter")),
+        			c.getString(c.getColumnIndex("set_led_on")),
+        			c.getInt(c.getColumnIndex("chT")),
+        			c.getInt(c.getColumnIndex("mvT"))
         			);   
-            trials.add(trial);  
+            subjects.add(trial);  
         }  
         c.close();  
-        return trials;  
-	}  
+        return subjects;
+    }
 }

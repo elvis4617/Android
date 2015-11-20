@@ -1,31 +1,20 @@
 package elvis.game.cognitive;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import android.app.ListActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import android.widget.TextView;
-import elvis.game.cognitive.dao.DBManager;
-import elvis.game.cognitive.data.Trials;
 
 public class Data_Set_Trials_Activity extends ListActivity implements
 		OnClickListener {
 
-	private boolean[] isToggle;
+	/*private boolean[] isToggle;
 	private Button clear;
 	private DBManager mgr;
-	List<HashMap<String, Object>> data;
-
-	@SuppressWarnings("unused")
+	List<HashMap<String, Object>> data;*/
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -34,16 +23,16 @@ public class Data_Set_Trials_Activity extends ListActivity implements
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		setContentView(R.layout.set_trials);
-		clear = (Button) this.findViewById(R.id.clearData);
+		/*clear = (Button) this.findViewById(R.id.clearData);
 		clear.setOnClickListener(this);
 		mgr = new DBManager(this);
-		show();
+		//show();
 		for (boolean b : isToggle) {
 			b = false;
-		}
+		}*/
 	}
 
-	@Override
+	/*@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		// TODO Auto-generated method stub
 		super.onListItemClick(l, v, position, id);
@@ -102,10 +91,10 @@ public class Data_Set_Trials_Activity extends ListActivity implements
 		setListAdapter(adapter);
 
 	}
-
+*/
 	@Override
 	public void onClick(View v) {
-		switch (v.getId()) {
+		/*switch (v.getId()) {
 		//case R.id.GridStyle:
 			// i = new Intent(this, Data_Set_Trials_Activity.class);
 			//break;
@@ -118,10 +107,10 @@ public class Data_Set_Trials_Activity extends ListActivity implements
 			SimpleAdapter adapter = (SimpleAdapter) getListAdapter();
 			adapter.notifyDataSetChanged();
 			break;
-		}
+		}*/
 	}
 
-	private List<HashMap<String, Object>> toMap(List<Trials> list) {
+	/*private List<HashMap<String, Object>> toMap(List<Trials> list) {
 		List<HashMap<String, Object>> rList = new ArrayList<HashMap<String, Object>>();
 		for (Trials trial : list) {
 			HashMap<String, Object> map = new HashMap<String, Object>();
@@ -132,6 +121,6 @@ public class Data_Set_Trials_Activity extends ListActivity implements
 			rList.add(map);
 		}
 		return rList;
-	}
+	}*/
 
 }

@@ -1,21 +1,14 @@
 package elvis.game.cognitive;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.codec.binary.Base64;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -38,9 +31,11 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 import elvis.game.cognitive.dao.DBManager;
 import elvis.game.cognitive.data.ColorData;
+import elvis.game.cognitive.data.CurCell;
 import elvis.game.cognitive.data.RectArea;
 import elvis.game.cognitive.data.TimeRecorder;
 import elvis.game.cognitive.material.UIModel;
@@ -57,9 +52,9 @@ public class MixedColorView extends SurfaceView implements
 	private Drawable mTimeTotalImage;
 	private Drawable mTimeExpendImage;
 	private Drawable mCharacter;
-	private Drawable mGridChar;
 	private Drawable mDestination;
 	private Drawable mDialog;
+	private Drawable go;
 	private Bitmap mBgImage;
 
 	private RectArea mPaintArea;
@@ -84,102 +79,249 @@ public class MixedColorView extends SurfaceView implements
 	private float rate;
 
 	private int[][] hyperSet;
-	private int[][] answerSet = {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}};
-	
+	private int[][] answerSet = { { -1, -1 }, { -1, -1 }, { -1, -1 },
+			{ -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } };
+
 	private int setCounter;
 	private int hyperCounter;
 	private int blockCounter;
-	
+
 	private DBManager mgr;
 	private int orintation;
-	private TimeRecorder timeRecorder;
-	
-	private int SET_NUMBER = 5;
-	
+	private List<TimeRecorder> timeRecorders;
+
 	private SharedPreferences mBaseSettings;
 	private SharedPreferences mGameSettings;
-	
+
 	private int charWidth = 0;
 	private int charHeight = 0;
 	private int destWidth = 0;
 	private int destHeight = 0;
-	
+
 	private int startXChar = 120;
 	private int startYChar = 30;
 	private int startXDest = 1000;
 	private int startYDest = 50;
 
+	private String subject_name;
+	private long home_key_time = System.currentTimeMillis();
+	private long set_led_on = System.currentTimeMillis();
 
 	public MixedColorView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mContext = context;
 		SurfaceHolder holder = getHolder();
-		holder.addCallback(this);;
+		holder.addCallback(this);
+		;
 		mHandler = new Handler() {
 			public void handleMessage(Message m) {
 
-				LayoutInflater factory = LayoutInflater.from(mContext);
-				if(m.getData().getInt(MixedConstant.GAME_STATUS_COMPLETE_SET) == UIModel.GAME_STATUS_COMPLETE_SET){
-					View dialogView = factory.inflate(R.layout.congratulation,
-							null);
-					dialogView.setFocusableInTouchMode(true);
-					dialogView.requestFocus();
-					dialogView.setBackgroundDrawable(mDialog);
-	
-					final AlertDialog dialog = new AlertDialog.Builder(mContext)
-							.setView(dialogView).create();
-					dialog.setCancelable(false);
-					dialog.show();
-					dialogView.findViewById(R.id.toNextHyper).setOnClickListener(
-							new OnClickListener() {
-								@Override
-								public void onClick(View v) {
-									dialog.dismiss();
-									restartGame();
-								}
-							});
-	
-		
-					dialogView.findViewById(R.id.menu).setOnClickListener(
-							new OnClickListener() {
-								@Override
-								public void onClick(View v) {
-									dialog.dismiss();
-									((MixedColorActivity) mContext).finish();
-								}
-							});
-				}
+				final LayoutInflater factory = LayoutInflater.from(mContext);
+				final View dialogView = factory.inflate(
+						R.layout.congratulation, null);
+				dialogView.setFocusableInTouchMode(true);
+				dialogView.requestFocus();
+				dialogView.setBackground(mDialog);
 
+				final AlertDialog dialog = new AlertDialog.Builder(mContext)
+						.setView(dialogView).create();
+				dialog.setCancelable(false);
+				dialog.show();
+				dialogView.findViewById(R.id.toNextHyper).setOnClickListener(
+						new OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								dialog.dismiss();
+								if (hyperCounter < MixedConstant.HYPER_NUMBER)
+									restartGame();
+								else {
+									hyperCounter = 0;
+									blockCounter++;
+									mGameSettings
+											.edit()
+											.putInt("blockCounter",
+													blockCounter).commit();
+									Log.i("Block Counter", blockCounter + "");
+									mgr.add(timeRecorders);
+
+									List<TimeRecorder> eles = mgr
+											.queryForSubjects(mGameSettings
+													.getString("subject_name",
+															"unknow"));
+									if (!eles.isEmpty()) {
+										Log.i("in", "in");
+										List<CurCell> data = new ArrayList<CurCell>();
+										for (TimeRecorder t : eles) {
+											data.add(new CurCell(eles
+													.indexOf(t) + 1, 0, t
+													.getSubjectID()));
+											data.add(new CurCell(eles
+													.indexOf(t) + 1, 1, t
+													.getBlockCounter() + 1 + ""));
+											data.add(new CurCell(eles
+													.indexOf(t) + 1, 2, t
+													.getHyperCounter() + 1 + ""));
+											data.add(new CurCell(eles
+													.indexOf(t) + 1, 3, t
+													.getHomeKeyTime()));
+											data.add(new CurCell(eles
+													.indexOf(t) + 1, 4, t
+													.getSetCounter() + 1 + ""));
+											data.add(new CurCell(eles
+													.indexOf(t) + 1, 5, t
+													.getSetLedOn()));
+											data.add(new CurCell(eles
+													.indexOf(t) + 1, 6, t
+													.getChT() + ""));
+											data.add(new CurCell(eles
+													.indexOf(t) + 1, 7, t
+													.getMvT() + ""));
+										}
+										Log.i("subjet name", subject_name);
+										MixedConstant.writeExcel(data,
+												subject_name);
+									}
+
+									Intent i = new Intent(mContext,
+											SetCongratulation.class);
+									mContext.startActivity(i);
+								}
+							}
+						});
+
+				dialogView.findViewById(R.id.menu).setOnClickListener(
+						new OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								final View dialogView = factory.inflate(
+										R.layout.alertdialog, null);
+								dialogView.setFocusableInTouchMode(true);
+								dialogView.requestFocus();
+								
+								final AlertDialog alertDialog = new AlertDialog.Builder(mContext).setView(dialogView).create();
+								alertDialog.setCancelable(false);
+								alertDialog.show();
+								
+								final EditText pw = (EditText) dialogView.findViewById(R.id.password);
+								
+								dialogView.findViewById(R.id.password_exit).setOnClickListener(
+										new OnClickListener() {
+											@Override
+											public void onClick(View v) {
+												// TODO Auto-generated method stub
+												if(pw.getText().toString().equals(MixedConstant.PREFERENCE_KEY_PASSWORD)){
+													mgr.add(timeRecorders);
+													mGameSettings.edit()
+															.putString("subjectBase64", "")
+															.commit();
+													mGameSettings.edit().putInt("blockCounter", 0)
+															.commit();
+													mGameSettings.edit().putInt("hyperCounter", 0)
+															.commit();
+													mGameSettings.edit().putInt("setCounter", 0)
+															.commit();
+
+													
+													List<TimeRecorder> eles = mgr
+															.queryForSubjects(mGameSettings
+																	.getString("subject_name",
+																			"unknow"));
+													if (!eles.isEmpty()) {
+														Log.i("in", "in");
+														List<CurCell> data = new ArrayList<CurCell>();
+														for (TimeRecorder t : eles) {
+															data.add(new CurCell(
+																	eles.indexOf(t) + 1, 0, t
+																			.getSubjectID()));
+															data.add(new CurCell(
+																	eles.indexOf(t) + 1, 1, t
+																			.getBlockCounter()
+																			+ 1
+																			+ ""));
+															data.add(new CurCell(
+																	eles.indexOf(t) + 1, 2, t
+																			.getHyperCounter()
+																			+ 1
+																			+ ""));
+															data.add(new CurCell(
+																	eles.indexOf(t) + 1, 3, t
+																			.getHomeKeyTime()));
+															data.add(new CurCell(
+																	eles.indexOf(t) + 1, 4, t
+																			.getSetCounter()
+																			+ 1
+																			+ ""));
+															data.add(new CurCell(
+																	eles.indexOf(t) + 1, 5, t
+																			.getSetLedOn()));
+															data.add(new CurCell(
+																	eles.indexOf(t) + 1, 6, t
+																			.getChT() + ""));
+															data.add(new CurCell(
+																	eles.indexOf(t) + 1, 7, t
+																			.getMvT() + ""));
+														}
+														Log.i("subjet name", subject_name);
+														MixedConstant
+																.writeExcel(data, subject_name);
+													}
+													
+													alertDialog.dismiss();
+													dialog.dismiss();
+													
+													Intent i = new Intent(mContext, Go.class);
+													i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+													mContext.startActivity(i);
+												}else Toast.makeText(mContext, "Password invalid.", Toast.LENGTH_SHORT).show();
+											}
+										});
+								dialogView.findViewById(R.id.password_cancel).setOnClickListener(
+										new OnClickListener() {
+											@Override
+											public void onClick(View v) {
+												alertDialog.dismiss();
+											}
+											
+										});
+							}
+						});
 			}
 		};
-		
-		mBaseSettings = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, Context.MODE_PRIVATE); 
-		mGameSettings = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, Context.MODE_PRIVATE); 
-		
+
+		mBaseSettings = mContext.getSharedPreferences(
+				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO,
+				Context.MODE_PRIVATE);
+		mGameSettings = mContext.getSharedPreferences(
+				MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO,
+				Context.MODE_PRIVATE);
+
 		this.rate = mBaseSettings.getFloat("rate", 1f);
 
-		hyperSet = new int[SET_NUMBER][2];
-		
-		if(mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_SEQUENCE, true))
-			System.arraycopy(MixedConstant.HYPERSET1, 0, hyperSet, 0, SET_NUMBER);
+		hyperSet = new int[MixedConstant.SET_NUMBER][2];
+
+		if (mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_SEQUENCE,
+				true))
+			System.arraycopy(MixedConstant.HYPERSET1, 0, hyperSet, 0,
+					MixedConstant.SET_NUMBER);
 		else
-			System.arraycopy(MixedConstant.HYPERSET2, 0, hyperSet, 0, SET_NUMBER);
-		
+			System.arraycopy(MixedConstant.HYPERSET2, 0, hyperSet, 0,
+					MixedConstant.SET_NUMBER);
 
 		this.setCounter = mGameSettings.getInt("setCounter", 0);
 		this.hyperCounter = mGameSettings.getInt("hyperCounter", 0);
 		this.blockCounter = mGameSettings.getInt("blockCounter", 0);
-		Log.i("initial block counter", blockCounter+"");
-		
+
+		Log.i("initial block counter", blockCounter + "");
+
 		initRes();
-		
-		mUIThread = new MixedThread(holder, context, mHandler);
-		
 		mgr = new DBManager(mContext);
-		this.orintation = mBaseSettings.getInt("orientation", ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+		/*timeRecorders = (List<TimeRecorder>) MixedConstant
+				.getObjectInfo(mContext);*/
 		
-		getObjectInfo();
-		
+		timeRecorders = new ArrayList<TimeRecorder>();
+		subject_name = mGameSettings.getString("subject_name", "subject_"
+				+ System.currentTimeMillis());
 		setFocusable(true);
 	}
 
@@ -192,34 +334,45 @@ public class MixedColorView extends SurfaceView implements
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
 			int height) {
+		Log.i("width", width + "");
+		Log.i("height", height + "");
 		mPaintArea = new RectArea(0, 0, width, height);
 		mUIThread.initUIModel(mPaintArea);
-		mUIThread.setRunning(true);
-		mUIThread.start();
-		Log.i("mUIThread start", "mUIThread start");
+		Canvas c = holder.lockCanvas();
+		synchronized (holder) {
+			mUIThread.doDraw(c);
+		}
+		if (c != null) {
+			holder.unlockCanvasAndPost(c);
+		}
 	}
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
 		Log.i("surfaceCreated", "surfaceCreated");
+		mgr = new DBManager(mContext);
 		mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
 				R.drawable.settingrain1);
-		if(blockCounter == 0){
+		if (blockCounter == 0) {
 			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
 					R.drawable.settingrain1);
-		}else if(blockCounter == 1){
+		} else if (blockCounter == 1) {
 			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
-					R.drawable.settingfood2);
-		}else if(blockCounter == 2){
+					R.drawable.settingfood3);
+		} else if (blockCounter == 2) {
 			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
 					R.drawable.settingfriend5);
-		}else if(blockCounter == 3){
+		} else if (blockCounter == 3) {
 			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
 					R.drawable.settingcold2);
-		}else if(blockCounter == 4){
+		} else if (blockCounter == 4) {
 			mBgImage = BitmapFactory.decodeResource(mContext.getResources(),
 					R.drawable.settinghome);
 		}
+		mUIThread = new MixedThread(this.getHolder(), this.getContext(),
+				mHandler);
+		mPaintArea = new RectArea(0, 0, 1280, 800);
+		mUIThread.initUIModel(mPaintArea);
 	}
 
 	@Override
@@ -227,11 +380,13 @@ public class MixedColorView extends SurfaceView implements
 		Log.i("surfaceDestroyed", "surfaceDestroyed");
 		boolean retry = true;
 		mUIThread.setRunning(false);
+		mgr.closeDB();
 		while (retry) {
 			try {
 				mUIThread.join();
 				retry = false;
-				if(!mBgImage.isRecycled()) mBgImage.recycle();
+				if (!mBgImage.isRecycled())
+					mBgImage.recycle();
 			} catch (InterruptedException e) {
 				Log.d("", "Surface destroy failure:", e);
 			}
@@ -240,22 +395,55 @@ public class MixedColorView extends SurfaceView implements
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		if (event.getAction() == MotionEvent.ACTION_DOWN) {
+		if (event.getAction() == MotionEvent.ACTION_DOWN
+				&& mUIThread.getRunning()) {
 			mUIThread.checkSelection((int) event.getX(), (int) event.getY());
+		} else if (event.getAction() == MotionEvent.ACTION_DOWN
+				&& !mUIThread.getRunning()) {
+			if (event.getX() > 450 && event.getX() < 850 && event.getY() > 250
+					&& event.getY() < 650) {
+				mUIThread.playSoundEffect(UIModel.GAME_STATUS_START);
+				mUIThread.setRunning(true);
+				clearSet(answerSet);
+				mUIThread.getmUIModel().initStage();
+				mUIThread.start();
+				home_key_time = System.currentTimeMillis();
+				set_led_on = System.currentTimeMillis();
+			}
 		}
 		return true;
 	}
 
 	public void restartGame() {
 		Log.i("restart", "restart");
-		mUIThread = new MixedThread(this.getHolder(), this.getContext(), mHandler);
+		Log.i("mUIThread.getmUIModel().getEffectFlag()", mUIThread
+				.getmUIModel().getEffectFlag() + "");
+		mUIThread = new MixedThread(this.getHolder(), this.getContext(),
+				mHandler);
 		mUIThread.initUIModel(mPaintArea);
 		mUIThread.setRunning(true);
+		mUIThread.getmUIModel().initStage();
 		mUIThread.start();
+		home_key_time = System.currentTimeMillis();
+		set_led_on = System.currentTimeMillis();
+	}
+
+	public void restartGameMiss() {
+		Log.i("restart", "restart");
+		home_key_time = System.currentTimeMillis();
+		set_led_on = System.currentTimeMillis();
+		mUIThread = new MixedThread(this.getHolder(), this.getContext(),
+				mHandler);
+		mUIThread.initUIModel(mPaintArea);
+		mUIThread.setRunning(false);
+		Canvas c = getHolder().lockCanvas();
+		synchronized (c) {mUIThread.doDraw(c);}
+		if (c != null) 
+			getHolder().unlockCanvasAndPost(c);
 	}
 
 	private void clearSet(int[][] set) {
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < MixedConstant.SET_NUMBER; i++) {
 			set[i][0] = -1;
 			set[i][1] = -1;
 		}
@@ -263,39 +451,46 @@ public class MixedColorView extends SurfaceView implements
 
 	@SuppressWarnings("deprecation")
 	private void initRes() {
-		Log.i("initRes","initRes");
+		Log.i("initRes", "initRes");
 		mTimeTotalImage = mContext.getResources().getDrawable(
 				R.drawable.time_total);
 		mTimeExpendImage = mContext.getResources().getDrawable(
 				R.drawable.time_expend);
 
-		if(blockCounter == 0) {
-			mCharacter = mContext.getResources().getDrawable(R.drawable.mainpablo);
-			mGridChar = mContext.getResources().getDrawable(R.drawable.rain_penguin);
-			mDestination = mContext.getResources().getDrawable(R.drawable.objectrain);
-			mDialog = mContext.getResources().getDrawable(R.drawable.goalrain);
-		}else if(blockCounter == 1){
-			mCharacter = mContext.getResources().getDrawable(R.drawable.rain_penguin);
-			mGridChar = mContext.getResources().getDrawable(R.drawable.goalfood1);
-			mDestination = mContext.getResources().getDrawable(R.drawable.objectfood);
-			mDialog = mContext.getResources().getDrawable(R.drawable.goalfood1);
-		}else if(blockCounter == 2){
-			mCharacter = mContext.getResources().getDrawable(R.drawable.gentleman_penguin);
-			mGridChar = mContext.getResources().getDrawable(R.drawable.gentleman_penguin);
-			mDestination = mContext.getResources().getDrawable(R.drawable.objectfriend2);
-			mDialog = mContext.getResources().getDrawable(R.drawable.goalfriend1);
-		}else if(blockCounter == 3){
-			mCharacter = mContext.getResources().getDrawable(R.drawable.gentleman_penguin);
-			mGridChar = mContext.getResources().getDrawable(R.drawable.goalcold2);
-			mDestination = mContext.getResources().getDrawable(R.drawable.objectcold2);
-			mDialog = mContext.getResources().getDrawable(R.drawable.goalcold1);
-		}else if(blockCounter == 4){
-			mCharacter = mContext.getResources().getDrawable(R.drawable.goalcold2);
-			mGridChar = mContext.getResources().getDrawable(R.drawable.pinga);
-			mDestination = mContext.getResources().getDrawable(R.drawable.objecthome);
-			mDialog = mContext.getResources().getDrawable(R.drawable.goalhome);
+		go = mContext.getResources().getDrawable(R.drawable.go);
+
+		if (blockCounter == 0) {
+			mCharacter = mContext.getResources().getDrawable(
+					R.drawable.mainpablo);
+			mDestination = mContext.getResources().getDrawable(
+					R.drawable.objectrain);
+			mDialog = mContext.getResources().getDrawable(R.drawable.ia1);
+		} else if (blockCounter == 1) {
+			mCharacter = mContext.getResources().getDrawable(
+					R.drawable.rain_penguin);
+			mDestination = mContext.getResources().getDrawable(
+					R.drawable.objectfood);
+			mDialog = mContext.getResources().getDrawable(R.drawable.ia21);
+		} else if (blockCounter == 2) {
+			mCharacter = mContext.getResources().getDrawable(
+					R.drawable.gentleman_penguin);
+			mDestination = mContext.getResources().getDrawable(
+					R.drawable.objectfriend2);
+			mDialog = mContext.getResources().getDrawable(R.drawable.ia31);
+		} else if (blockCounter == 3) {
+			mCharacter = mContext.getResources().getDrawable(
+					R.drawable.gentleman_penguin);
+			mDestination = mContext.getResources().getDrawable(
+					R.drawable.objectcold2);
+			mDialog = mContext.getResources().getDrawable(R.drawable.ia41);
+		} else if (blockCounter == 4) {
+			mCharacter = mContext.getResources().getDrawable(
+					R.drawable.goalcold2);
+			mDestination = mContext.getResources().getDrawable(
+					R.drawable.objecthome);
+			mDialog = mContext.getResources().getDrawable(R.drawable.ia51);
 		}
-		
+
 		mSrcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		mSrcPaint.setColor(Color.parseColor("#AAC1CDC1"));
 		mTarPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -318,9 +513,9 @@ public class MixedColorView extends SurfaceView implements
 		colorBgMap = new HashMap<Integer, Paint>();
 
 		Paint curColor = new Paint(Paint.ANTI_ALIAS_FLAG);
-		curColor.setColor(Color.parseColor("#FFFFFF"));					
-		colorBgMap.put(0, curColor); 
-		
+		curColor.setColor(Color.parseColor("#FFFFFF"));
+		colorBgMap.put(0, curColor);
+
 		SharedPreferences baseSettings = mContext.getSharedPreferences(
 				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, 0);
 		mSoundsFlag = baseSettings.getBoolean(
@@ -337,55 +532,32 @@ public class MixedColorView extends SurfaceView implements
 				soundPool.load(getContext(), R.raw.pass, 1));
 		soundPoolMap.put(UIModel.EFFECT_FLAG_TIMEOUT,
 				soundPool.load(getContext(), R.raw.timeout, 1));
+		soundPoolMap.put(UIModel.GAME_STATUS_COMPLETE_SET,
+				soundPool.load(getContext(), R.raw.set_victory, 1));
+		soundPoolMap.put(UIModel.GAME_STATUS_START,
+				soundPool.load(getContext(), R.raw.start, 1));
 	}
 
-	private void saveObject(TimeRecorder subject) {  
-        SharedPreferences mSharedPreferences = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, Context.MODE_PRIVATE);  
-        try {  
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();  
-            ObjectOutputStream oos = new ObjectOutputStream(baos);  
-            oos.writeObject(subject);  
-  
-            String subjectBase64 = new String(Base64.encodeBase64(baos.toByteArray()));  
-            SharedPreferences.Editor editor = mSharedPreferences.edit();  
-            editor.putString("subjectBase64", subjectBase64);  
-            editor.commit();  
-        } catch (IOException e) {  
-            e.printStackTrace();  
-        }  
-    } 
-	
-	protected void getObjectInfo() {  
-        try {  
-            SharedPreferences mSharedPreferences = mContext.getSharedPreferences(MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, Context.MODE_PRIVATE);  
-            String personBase64 = mSharedPreferences.getString("subjectBase64", "");  
-            byte[] base64Bytes = Base64.decodeBase64(personBase64.getBytes());  
-            ByteArrayInputStream bais = new ByteArrayInputStream(base64Bytes);  
-            ObjectInputStream ois = new ObjectInputStream(bais);  
-            timeRecorder = (TimeRecorder) ois.readObject();  
-        } catch (Exception e) {  
-            e.printStackTrace();  
-        }  
-          
-    }  
-	
 	public MixedThread getmUIThread() {
 		return mUIThread;
 	}
-	
-	
+
+	public List<TimeRecorder> getSubjects() {
+		return timeRecorders;
+	}
+
 	public int getSetCounter() {
 		return setCounter;
 	}
-	
+
 	public int getHyperCounter() {
 		return hyperCounter;
 	}
-	
+
 	public int getBlockCounter() {
 		return blockCounter;
 	}
-	
+
 	// thread for updating UI
 	class MixedThread extends Thread {
 
@@ -394,114 +566,186 @@ public class MixedColorView extends SurfaceView implements
 		private Context mContext;
 
 		private Handler mHandler;
-		
-		private boolean mRun = true;
+
+		private boolean mRun = false;
+		private boolean mPause = false;
 
 		private UIModel mUIModel;
 
-		public MixedThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
+		public MixedThread(SurfaceHolder surfaceHolder, Context context,
+				Handler handler) {
 			mSurfaceHolder = surfaceHolder;
 			mContext = context;
 			mHandler = handler;
-
 		}
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public void run() {
 			while (mRun) {
-				Canvas c = null;
-				int flag = 0;
-				try {
-					mUIModel.updateUIModel();
-					c = mSurfaceHolder.lockCanvas(null);
-					synchronized (mSurfaceHolder) {
-						doDraw(c);
+				if(!mPause){
+					Canvas c = null;
+					int flag = 0;
+					try {
+						mUIModel.updateUIModel();
+						c = mSurfaceHolder.lockCanvas(null);
+						synchronized (mSurfaceHolder) {
+							doDraw(c);
+						}
+						flag = mUIModel.getEffectFlag();
+						handleEffect(flag);
+						// Thread.sleep(1);
+					} catch (Exception e) {
+						Log.d("", "Error at 'run' method", e);
+					} finally {
+						if (c != null) {
+							mSurfaceHolder.unlockCanvasAndPost(c);
+						}
 					}
-					flag = mUIModel.getEffectFlag();
-					handleEffect(flag);
-					Thread.sleep(10);
-				} catch (Exception e) {
-					Log.d("", "Error at 'run' method", e);
-				} finally {
-					if (c != null) {
-						mSurfaceHolder.unlockCanvasAndPost(c);
+	
+					if (flag == UIModel.EFFECT_FLAG_PASS) {
+						Log.i("in", "in");
+						saveSubject();
+						Log.i("ArrayList", timeRecorders.toString());
+						
+						while(mUIModel.getLed() == 0){}
+						set_led_on = mUIModel.getLed();
+						mUIModel.setLed();
 					}
-				}
-				
-				if(flag == UIModel.EFFECT_FLAG_PASS){
-					setCounter++;
-				}
-				
-				
-				if(flag == UIModel.GAME_STATUS_COMPLETE_SET){
-					Log.i("GAME_STATUS_COMPLETE_SET", "GAME_STATUS_COMPLETE_SET");
-					Log.i("timeRecorder", timeRecorder.toString());
-					Log.i("blockCounter", blockCounter+"s");
-					Log.i("hyperCounter", hyperCounter+"s");
-					Log.i("SetCounter", setCounter+"s");
+	
+					if (flag == UIModel.GAME_STATUS_COMPLETE_SET) {
+						Log.i("GAME_STATUS_COMPLETE_SET",
+								"GAME_STATUS_COMPLETE_SET");
+						Log.i("blockCounter", blockCounter + "s");
+						Log.i("hyperCounter", hyperCounter + "s");
+						Log.i("SetCounter", setCounter + "s");
+	
+						saveSubject();
 					
-					hyperCounter++;
-					mRun = false;
-					clearSet(answerSet);
-					setCounter = 0;
-
-					if(hyperCounter < MixedConstant.BLOCK_NUMBER){
+						hyperCounter++;
+						mRun = false;
+						clearSet(answerSet);
+						
+						setCounter = 0;
+	
 						Message message = new Message();
 						Bundle bundle = new Bundle();
-						bundle.putInt(MixedConstant.GAME_STATUS_COMPLETE_SET, UIModel.GAME_STATUS_COMPLETE_SET);
 						message.setData(bundle);
+						
+						if (blockCounter == 0) {
+							if (hyperCounter == 2)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia2);
+							else if (hyperCounter == 3)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia3);
+							else if (hyperCounter == 4)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia4);
+							else if (hyperCounter == 5)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia5);
+						} else if (blockCounter == 1) {
+							if (hyperCounter == 2)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia22);
+							else if (hyperCounter == 3)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia23);
+							else if (hyperCounter == 4)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia24);
+							else if (hyperCounter == 5)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia25);
+						} else if (blockCounter == 2) {
+							if (hyperCounter == 2)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia32);
+							else if (hyperCounter == 3)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia33);
+							else if (hyperCounter == 4)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia34);
+							else if (hyperCounter == 5)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia35);
+						} else if (blockCounter == 3) {
+							if (hyperCounter == 2)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia42);
+							else if (hyperCounter == 3)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia43);
+							else if (hyperCounter == 4)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia44);
+							else if (hyperCounter == 5)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia45);
+						} else if (blockCounter == 4) {
+							if (hyperCounter == 2)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia52);
+							else if (hyperCounter == 3)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia54);
+							else if (hyperCounter == 4)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.ia55);
+							else if (hyperCounter == 5)
+								mDialog = mContext.getResources().getDrawable(
+										R.drawable.finalcongrats);
+						}
 						mHandler.sendMessage(message);
-					}else{
-						hyperCounter = 0;
-						blockCounter++;
-						mGameSettings.edit().putInt("blockCounter", blockCounter).commit();
-						Log.i("Block Counter", blockCounter+"");
-						Intent i = new Intent(mContext, SetCongratulation.class);
-						mContext.startActivity(i);
 					}
-					
-					
+	
+					if ((mBaseSettings.getBoolean(
+							MixedConstant.PREFERENCE_KEY_HARDMODE, true) && flag == UIModel.EFFECT_FLAG_MISS)
+							|| flag == UIModel.EFFECT_FLAG_TIMEOUT) {
+						Log.i("flag miss || flag timeout",
+								"flag miss || flag timeout");
+						mRun = false;
+						
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							Log.d("", "Error at 'sleep 100'", e);
+						}
+	
+						saveSubject();
+						
+						setCounter = 0;
+						clearSet(answerSet);
+						
+						restartGameMiss();
+					}
+	
 				}
-				
-				
-				if ((mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false) && flag == UIModel.EFFECT_FLAG_MISS ) || 
-						flag == UIModel.EFFECT_FLAG_TIMEOUT) {
-					Log.i("flag miss || flag timeout", "flag miss || flag timeout");
-					mRun = false;
-					setCounter = 0;
-					clearSet(answerSet);
-					/*restartGame();*/
-					
-					Intent i = new Intent(mContext, Go.class);
-					saveObject(timeRecorder);
-					/*Bundle bundle = new Bundle();
-					bundle.putString("blockCounter", blockCounter+"");
-					bundle.putString("hyperCounter", hyperCounter+"");
-					bundle.putString("setCounter", setCounter+"");
-					i.putExtras(bundle);*/
-					mContext.startActivity(i);
-				}
-				
-				
 			}
 		}
 
-		private void doDraw(Canvas canvas) {
-			canvas.drawBitmap(mBgImage, 0, 0, null);
-			
-			int distance = ((1020+20)-(250-20))/MixedConstant.HYPER_NUMBER;
-			
-			canvas.drawLine((250-20)+ distance * hyperCounter, 90, 1020+20, 90, new Paint(Paint.ANTI_ALIAS_FLAG));
-			canvas.drawLine((250-20)+ distance * hyperCounter, 91, 1020+20, 91, new Paint(Paint.ANTI_ALIAS_FLAG));
-			
+		public void doDraw(Canvas canvas) {
+			canvas.drawBitmap(mBgImage, 0, 0, new Paint(Paint.ANTI_ALIAS_FLAG));
+
+			int distance = ((1020 + 20) - (250 - 20))
+					/ MixedConstant.HYPER_NUMBER;
+
+			canvas.drawLine((250 - 20) + distance * hyperCounter, 90,
+					1020 + 20, 90, new Paint(Paint.ANTI_ALIAS_FLAG));
+			canvas.drawLine((250 - 20) + distance * hyperCounter, 91,
+					1020 + 20, 91, new Paint(Paint.ANTI_ALIAS_FLAG));
+
 			Paint circle_Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 			circle_Paint.setStyle(Style.FILL);
 			circle_Paint.setColor(Color.GRAY);
-			
-			for(int i = hyperCounter; i<= 5; i++){
-				canvas.drawCircle((250-20)+distance*i, 90, 6, circle_Paint);
+
+			for (int i = hyperCounter; i <= MixedConstant.HYPER_NUMBER; i++) {
+				canvas.drawCircle((250 - 20) + distance * i, 90, 6,
+						circle_Paint);
 			}
-			
+
 			UIModel uiModel = mUIModel;
 
 			FontMetrics fmsr = mGameMsgLeftPaint.getFontMetrics();
@@ -513,68 +757,68 @@ public class MixedColorView extends SurfaceView implements
 							(int) (15 * rate),
 							(int) (mPaintArea.mMaxX / 2 + 80 * rate),
 							(int) (25 * rate));
-			
-			
+
 			mCharacter.setBounds(80, 30, 180, 150);
 			mDestination.setBounds(950, 30, 1250, 150);
-			
-			if(blockCounter == 0){
+
+			if (blockCounter == 0) {
 				charWidth = 120;
 				charHeight = 140;
-				
+
 				destWidth = 170;
-				destHeight = 659/(945/destWidth);
-				
-				startXChar = 120 + hyperCounter*distance;
-			}else if(blockCounter == 1){
+				destHeight = 659 / (945 / destWidth);
+
+				startXChar = 120 + hyperCounter * distance;
+			} else if (blockCounter == 1) {
 				charWidth = 120;
 				charHeight = 140;
-				
+
 				destWidth = 170;
-				destHeight = 262/(425/destWidth);
-				
-				startXChar = 120 + hyperCounter*distance;
-				
-			}
-			else if(blockCounter == 2){
+				destHeight = 262 / (425 / destWidth);
+
+				startXChar = 120 + hyperCounter * distance;
+
+			} else if (blockCounter == 2) {
 				charWidth = 120;
 				charHeight = 140;
-				
+
 				destWidth = 110;
-				destHeight = 2400/(2001/destWidth);
-				
-				startXChar = 120 + hyperCounter*distance;
+				destHeight = 2400 / (2001 / destWidth);
+
+				startXChar = 120 + hyperCounter * distance;
 				startYDest = 20;
-				
-			}else if(blockCounter == 3){
+
+			} else if (blockCounter == 3) {
 				charWidth = 120;
 				charHeight = 140;
-				
+
 				destWidth = 120;
-				destHeight = 600/(495/destWidth);
-				
-				startXChar = 120 + hyperCounter*distance;
+				destHeight = 600 / (495 / destWidth);
+
+				startXChar = 120 + hyperCounter * distance;
 				startYDest = 20;
-				
-			}else if(blockCounter == 4){
+
+			} else if (blockCounter == 4) {
 				charWidth = 120;
 				charHeight = 140;
-				
+
 				destWidth = 200;
-				destHeight = 226/(607/destWidth);
-				
-				startXChar = 120 + hyperCounter*distance;
+				destHeight = 226 / (607 / destWidth);
+
+				startXChar = 120 + hyperCounter * distance;
 				startYDest = 40;
-				
+
 			}
-			
-			mCharacter.setBounds(startXChar, startYChar, startXChar+charWidth, startYChar+charHeight);
-			mDestination.setBounds(startXDest, startYDest, startXDest+destWidth, startYDest+destHeight);
-			
+
+			mCharacter.setBounds(startXChar, startYChar,
+					startXChar + charWidth, startYChar + charHeight);
+			mDestination.setBounds(startXDest, startYDest, startXDest
+					+ destWidth, startYDest + destHeight);
+
 			mCharacter.draw(canvas);
 			mDestination.draw(canvas);
 			mTimeTotalImage.draw(canvas);
-			
+
 			mTimeExpendImage.setBounds(
 					(int) (mPaintArea.mMaxX / 2 - 80 * rate),
 					(int) (15 * rate),
@@ -587,54 +831,78 @@ public class MixedColorView extends SurfaceView implements
 			canvas.drawText(uiModel.toTimeText(uiModel.getStageTime()),
 					mPaintArea.mMaxX - 5 * rate, 15 * rate
 							- (fmsr.ascent + fmsr.descent), mGameMsgRightPaint);
+			if (mRun) {
+				// Log.i("mRun", mRun+"");
+				int firstPos = mUIModel.getFirstPos();
+				int secondPos = mUIModel.getSecondPos();
+				int firstAns = mUIModel.getFirstAns();
+				int secondAns = mUIModel.getSecondAns();
 
-			int firstPos = mUIModel.getFirstPos();
-			int secondPos = mUIModel.getSecondPos();
-			int firstAns = mUIModel.getFirstAns();
-			int secondAns = mUIModel.getSecondAns();
-			
-			/*Log.i("first position", firstPos+"");
-			Log.i("second position", secondPos+"");*/
-			
-			List<ColorData> targetColors = uiModel.getTargetColor();
-			for (ColorData curColor : targetColors) {
-				Paint paint = colorBgMap.get(curColor.getMBgColor());
-				paint.setStyle(Style.STROKE);
-				canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);
-				 
-				/*if(targetColors.indexOf(curColor) == firstPos ||
-						targetColors.indexOf(curColor) == secondPos){
-					
-				}else
-					canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);*/
-				
-				if (targetColors.indexOf(curColor) == firstPos && firstAns == -1) {
-					int [] location = mUIModel.getGridLocation(firstPos);
-					mGridChar.setBounds( location[0] + (mUIModel.getGridSize()-charWidth)/2,
-							location[1]+10,
-							location[0] + (mUIModel.getGridSize()-charWidth)/2 + charWidth, 
-							location[1]+mUIModel.getGridSize());
-					mGridChar.draw(canvas);
+				List<ColorData> targetColors = uiModel.getTargetColor();
+				for (ColorData curColor : targetColors) {
+					Paint paint = colorBgMap.get(curColor.getMBgColor());
+					paint.setColor(Color.WHITE);
+					paint.setStyle(Style.STROKE);
+					paint.setStrokeWidth(2.0f);
+					canvas.drawRoundRect(curColor.getRectF(), 20, 20, paint);
+
+					if (targetColors.indexOf(curColor) == firstPos
+							&& firstAns == -1) {
+						if (mBaseSettings.getBoolean(
+								MixedConstant.PREFERENCE_KEY_DEBUG, true)) {
+							paint.setColor(Color.RED);
+							canvas.drawRoundRect(curColor.getRectF(), 20, 20,
+									paint);
+						}
+						int[] location = mUIModel.getGridLocation(firstPos);
+						mCharacter.setBounds(
+								location[0]
+										+ (mUIModel.getGridSize() - charWidth)
+										/ 2, location[1] + 10, location[0]
+										+ (mUIModel.getGridSize() - charWidth)
+										/ 2 + charWidth,
+								location[1] + mUIModel.getGridSize());
+						mCharacter.draw(canvas);
+						paint.setColor(Color.WHITE);
+					}
+					if (targetColors.indexOf(curColor) == secondPos
+							&& firstAns != -1) {
+						if (mBaseSettings.getBoolean(
+								MixedConstant.PREFERENCE_KEY_DEBUG, true)) {
+							paint.setColor(Color.RED);
+							canvas.drawRoundRect(curColor.getRectF(), 20, 20,
+									paint);
+						}
+						paint.setColor(Color.WHITE);
+					}
+					if (targetColors.indexOf(curColor) == secondPos
+							&& secondAns == -1) {
+						int[] location = mUIModel.getGridLocation(secondPos);
+						mCharacter.setBounds(
+								location[0]
+										+ (mUIModel.getGridSize() - charWidth)
+										/ 2, location[1] + 10, location[0]
+										+ (mUIModel.getGridSize() - charWidth)
+										/ 2 + charWidth,
+								location[1] + mUIModel.getGridSize());
+						mCharacter.draw(canvas);
+					}
+
+					// paint.setColor(color);
+					paint.setStyle(Style.FILL);
 				}
-				if(targetColors.indexOf(curColor) == secondPos && secondAns == -1){
-					int [] location = mUIModel.getGridLocation(secondPos);
-					mGridChar.setBounds( location[0] + (mUIModel.getGridSize()-charWidth)/2, 
-							location[1]+10,
-							location[0] + (mUIModel.getGridSize()-charWidth)/2 + charWidth, 
-							location[1]+mUIModel.getGridSize());
-					mGridChar.draw(canvas);
-				}
-				
-				/*paint.setColor(color);
-				paint.setStyle(Style.FILL);*/
+			} else {
+				go.setBounds(400, 150, 900, 800);
+				go.draw(canvas);
 			}
 		}
 
 		public void initUIModel(RectArea paintArea) {
-			mUIModel = new UIModel(paintArea, orintation, timeRecorder, mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false));
+			mUIModel = new UIModel(paintArea, orintation,
+					mBaseSettings.getBoolean(
+							MixedConstant.PREFERENCE_KEY_HARDMODE, false));
 			mUIModel.setHyperSet(hyperSet);
 			mUIModel.setAnswerSet(answerSet);
-			mUIModel.setMgr(mgr);
 			mBgImage = Bitmap.createScaledBitmap(mBgImage, paintArea.mMaxX,
 					paintArea.mMaxY, true);
 		}
@@ -671,23 +939,67 @@ public class MixedColorView extends SurfaceView implements
 						.getStreamVolume(AudioManager.STREAM_MUSIC);
 				float streamVolumeMax = mgr
 						.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-				float volume = streamVolumeCurrent / streamVolumeMax * 0.5f;
-				soundPool.play(soundPoolMap.get(soundId%10), volume, volume, 1, 0,
+				float volume = streamVolumeCurrent / streamVolumeMax;
+
+				if (soundId == UIModel.EFFECT_FLAG_PASS
+						|| soundId == UIModel.EFFECT_FLAG_PASS_FIRST)
+					volume *= 0.1f;
+				else if (soundId == UIModel.GAME_STATUS_COMPLETE_SET)
+					volume *= 0.8f;
+				else
+					volume = 1.3f;
+
+				soundPool.play(soundPoolMap.get(soundId), volume, volume, 1, 0,
 						1f);
 			} catch (Exception e) {
 				Log.d("PlaySounds", e.toString());
 			}
 		}
+		
+		public void saveSubject(){
+			TimeRecorder subject = new TimeRecorder();
+			subject.setSubjectID(subject_name);
+			subject.setBlockCounter(blockCounter);
+			subject.setHyperCounter(hyperCounter);
+			subject.setSetCounter(setCounter++);
+			subject.setSetLedOn(MixedConstant.parseTime(set_led_on));
+			subject.setHomeKeyTime(MixedConstant
+					.parseTime(home_key_time));
+			subject.setChT((int) mUIModel.getChT());
+			subject.setMvT((int) mUIModel.getMvT());
 
+			timeRecorders.add(subject);
+
+			MixedConstant.saveObject(mContext, timeRecorders,
+					MixedConstant.SUBJECT_NAME);
+			
+			mUIModel.clearTimer();
+		}
+
+		public void delay(int ms){
+			long timeLogger = System.currentTimeMillis();
+			while(System.currentTimeMillis()-timeLogger < ms){}
+		}
 		public void setRunning(boolean run) {
 			mRun = run;
+		}
+
+		public boolean getRunning() {
+			return mRun;
+		}
+		
+		public void setPause(boolean run) {
+			mPause = run;
+		}
+
+		public boolean getPause() {
+			return mPause;
 		}
 
 		public UIModel getmUIModel() {
 			return mUIModel;
 		}
-		
+
 	}// Thread
-	
 
 }

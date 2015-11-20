@@ -3,35 +3,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" 
-    android:gravity="center">
+    android:gravity="center"
+    >
 
-    
-	
-    <TextView
+	<LinearLayout
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_marginTop="50dp"
+	    android:gravity="center"
+	    android:orientation="vertical" >
+	    
+    	<TextView
         android:id="@+id/setCongra"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Congratulation"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:text="@string/congratulation"
         android:textAppearance="?android:attr/textAppearanceLarge" />
-	 
-	<LinearLayout 
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:orientation="horizontal">
 	    
         <Button
             android:id="@+id/toNextHyper"
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:text="Continue" />
-        
-        <Button
-            android:id="@+id/menu"
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:text="Back" />
-        </LinearLayout>
-        
+            android:text="@string/con" />
+
+      </LinearLayout>
+
+	<Button
+	    android:id="@+id/menu"
+	    android:layout_width="30dp"
+	    android:layout_height="30dp"
+	    android:layout_marginStart="230dp"
+	    android:layout_marginTop="320dp" 
+	    android:background="@drawable/round_button"/>
+
 </LinearLayout>

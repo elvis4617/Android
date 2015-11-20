@@ -1,17 +1,14 @@
 package elvis.game.cognitive.material;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import android.content.pm.ActivityInfo;
 import android.graphics.RectF;
 import android.util.Log;
-import elvis.game.cognitive.dao.DBManager;
 import elvis.game.cognitive.data.ColorData;
 import elvis.game.cognitive.data.RectArea;
-import elvis.game.cognitive.data.TimeRecorder;
-import elvis.game.cognitive.data.Trials;
+import elvis.game.cognitive.utils.MixedConstant;
 
 public class UIModel {
 
@@ -20,16 +17,18 @@ public class UIModel {
 	public static final int FIELD_MARK = 999;
 
 	public static final int GAME_ATTRIBUTE_LEAST_COLOR = 9;
-	public static final int GAME_ATTRIBUTE_TOTAL_STAGE = 5;
-	public static final long GAME_ATTRIBUTE_MAX_TIME_PER_CLICK = 150000;
+	public static final int GAME_ATTRIBUTE_TOTAL_STAGE = 7;
+	public static final long GAME_ATTRIBUTE_MAX_TIME_PER_CLICK = 15000;
 	public static final int GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT = 3;
 	public static final int TOTAL_GRID_AMOUNT = GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT
 			* GAME_ATTRIBUTE_MATRIX_EDGE_GRID_AMOUNT;
 
-	public static final int GAME_STATUS_PAUSE = 10;
-	public static final int GAME_STATUS_RUNNING = 11;
-	public static final int GAME_STATUS_COMPLETE_SET = 12;
+	public static final int GAME_STATUS_PAUSE = 11;
+	public static final int GAME_STATUS_RUNNING = 12;
 	public static final int GAME_STATUS_GAMEOVER = 13;
+	
+	public static final int GAME_STATUS_START = 10;
+	public static final int GAME_STATUS_COMPLETE_SET = 14;
 
 	public static final int EFFECT_FLAG_NO_EFFECT = 0;
 	public static final int EFFECT_FLAG_PASS_FIRST = 1;
@@ -63,64 +62,41 @@ public class UIModel {
 	
 	private int gridSize;
 	
-	private long chT[];
-	private long mvT[];
+	private long chT;
+	private long mvT;
+	private long curTimeMillis;
 	
-	private DBManager mgr;
-
-	private TimeRecorder timeRecorder;
+	private boolean pauseBefore;
 	
 	private int mEffectFlag;
 
 	private int mSetCounter;
-	private int mHyperCounter;
 	private int mSetNumber;
 
 	private long mTimeLogger;
-
 	private long mStageTime;
-
-	private long mTotalTime;
+	private long led;
 	
 	private int col1, col2, col3;
 	private int row0, row1, row2;
-
-	private boolean hardMode;
 	
 	public synchronized void updateUIModel() {
-		long curTimeMillis = System.currentTimeMillis();
+		if(pauseBefore) {
+			pauseBefore = false;
+			mTimeLogger = System.currentTimeMillis();
+		}
+		curTimeMillis = System.currentTimeMillis();
 		mStageTime += curTimeMillis - mTimeLogger;
 		mTimeLogger = curTimeMillis;
 		
-		/*if ((answerSet[mStageCounter][0] != -1 && answerSet[mStageCounter][1] == -1)
-				|| (answerSet[mStageCounter][0] == -1 && answerSet[mStageCounter][1] != -1)) {
-			if (chT[mStageCounter] == -1)
-				chT[mStageCounter] = mStageTime;
-		}*/
-		
-		if (mStageTime >= GAME_ATTRIBUTE_MAX_TIME_PER_CLICK) {
-			/*Log.i("time out", "time out");
-			Log.i("stage counter", mStageCounter+"");
+		if (mStageTime >= GAME_ATTRIBUTE_MAX_TIME_PER_CLICK) 
 			mEffectFlag = EFFECT_FLAG_TIMEOUT;
-			if(chT[mStageCounter] == -1)
-				chT[mStageCounter] = GAME_ATTRIBUTE_MAX_TIME_PER_STAGE;
-			else if(mvT[mStageCounter] == -1)
-				mvT[mStageCounter] = mStageTime - chT[mStageCounter];*/
-			
-			/*mgr.add(new Trials(trialCounter, mStageCounter + 1,
-					getChT()[mStageCounter], getMvT()[mStageCounter]));*/
-			mEffectFlag = EFFECT_FLAG_TIMEOUT;
-			buildStage();
-		}
-
 	}
 
 	public synchronized void buildStage() {
-		mTotalTime += (mStageTime < GAME_ATTRIBUTE_MAX_TIME_PER_CLICK) ? mStageTime
-				: GAME_ATTRIBUTE_MAX_TIME_PER_CLICK;
 		mSetCounter++;
 		if (mSetCounter < GAME_ATTRIBUTE_TOTAL_STAGE) {
-			buildPaintArea(GAME_ATTRIBUTE_LEAST_COLOR);
+			//buildPaintArea(GAME_ATTRIBUTE_LEAST_COLOR);
 			mStageTime = 0;
 			mTimeLogger = System.currentTimeMillis();
 		} else {
@@ -131,7 +107,6 @@ public class UIModel {
 	public void initStage() {
 		mSetCounter = 0;
 		mStageTime = 0;
-		mTotalTime = 0;
 		mTimeLogger = System.currentTimeMillis();
 		buildPaintArea(GAME_ATTRIBUTE_LEAST_COLOR);
 	}
@@ -148,6 +123,7 @@ public class UIModel {
 		ColorData curColorData;
 		RectArea curRectArea;
 		mTarColor.clear();
+		
 		for (int i = 0; i < colorAmount; i++) {
 			curColor = paintPos.get(i);
 			curColorData = new ColorData();
@@ -166,75 +142,48 @@ public class UIModel {
 	public void checkSelection(int x, int y) {
 		int gridNumber = getGrid(x, y);
 		Log.i("gridNumber", gridNumber+"");
-		if(hardMode && (gridNumber != hyperSet[mSetCounter][0] && gridNumber != hyperSet[mSetCounter][1])){
-			mEffectFlag = EFFECT_FLAG_MISS;
+		if(gridNumber != hyperSet[mSetCounter][0] && gridNumber != hyperSet[mSetCounter][1]){
+			mEffectFlag = EFFECT_FLAG_NO_EFFECT;
 			return;
+		}
+		if (answerSet[mSetCounter][0] == -1){
+			if(gridNumber == hyperSet[mSetCounter][0]){
+				answerSet[mSetCounter][0] = gridNumber;
+				mEffectFlag = EFFECT_FLAG_PASS_FIRST;
+				chT = mStageTime;
+				mvT = 0;
+				mStageTime = 0;
+				mTimeLogger = System.currentTimeMillis();
+			}else{
+				mEffectFlag = EFFECT_FLAG_MISS;
+				chT = 0;
+				mvT = 0;
+				Log.i("miss fist", "miss first");
+			}
+		}else if(answerSet[mSetCounter][1] == -1){
+			if(gridNumber == hyperSet[mSetCounter][1]){
+				if(mSetCounter == mSetNumber - 1){
+					mEffectFlag = GAME_STATUS_COMPLETE_SET;
+					mvT = mStageTime;
+				}else{
+					answerSet[mSetCounter][1] = gridNumber;
+					mEffectFlag = EFFECT_FLAG_PASS;
+					mvT = mStageTime;
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						Log.d("", "Error at 'sleep 100'", e);
+					}
+					led = System.currentTimeMillis();
+					buildStage();
+				}
+			}else{
+				mEffectFlag = EFFECT_FLAG_MISS;
+				mvT = 0;
+				Log.i("miss second", "miss second");
+			}
 		}
 		
-		if (answerSet[mSetCounter][0] == -1
-				&& answerSet[mSetCounter][1] == -1) {
-			
-			if (gridNumber == hyperSet[mSetCounter][0]) {
-				answerSet[mSetCounter][0] = gridNumber;
-				mEffectFlag = EFFECT_FLAG_PASS_FIRST;
-				mStageTime = 0;
-				mTimeLogger = System.currentTimeMillis();
-				
-			} else if (gridNumber == hyperSet[mSetCounter][1]) {
-				answerSet[mSetCounter][1] = gridNumber;
-				mEffectFlag = EFFECT_FLAG_PASS_FIRST;
-				mStageTime = 0;
-				mTimeLogger = System.currentTimeMillis();
-			} else{
-				mEffectFlag = EFFECT_FLAG_MISS;
-				//dao
-			}
-			return;
-		}
-		if (answerSet[mSetCounter][0] != -1
-				&& answerSet[mSetCounter][1] == -1) {
-			if (gridNumber == hyperSet[mSetCounter][1]) {
-				answerSet[mSetCounter][1] = gridNumber;
-				
-				if(mSetCounter == mSetNumber - 1)
-						mEffectFlag = GAME_STATUS_COMPLETE_SET;
-				else{
-					mEffectFlag = EFFECT_FLAG_PASS;
-					buildStage();
-				}
-				//mvT[mSetCounter] = mStageTime - chT[mSetCounter];
-				
-				/*mgr.add(new Trials(trialCounter, mStageCounter + 1,
-						getChT()[mStageCounter], getMvT()[mStageCounter]));*/
-				
-			} else {
-				mEffectFlag = EFFECT_FLAG_MISS;
-				/*mgr.add(new Trials(trialCounter, mStageCounter + 1,
-						getChT()[mStageCounter], getMvT()[mStageCounter]));*/
-			}
-
-			return;
-		}
-		if (answerSet[mSetCounter][0] == -1
-				&& answerSet[mSetCounter][1] != -1) {
-			if (gridNumber == hyperSet[mSetCounter][0]) {
-				answerSet[mSetCounter][0] = gridNumber;
-				if(mSetCounter == mSetNumber - 1)
-					mEffectFlag = GAME_STATUS_COMPLETE_SET;
-				else{
-					mEffectFlag = EFFECT_FLAG_PASS;
-					buildStage();
-				}
-				/*mvT[mSetCounter] = mStageTime - chT[mSetCounter];
-				mgr.add(new Trials(trialCounter, mStageCounter + 1,
-						getChT()[mStageCounter], getMvT()[mStageCounter]));*/
-			} else {
-				mEffectFlag = EFFECT_FLAG_MISS;
-				/*mgr.add(new Trials(trialCounter, mStageCounter + 1,
-						getChT()[mStageCounter], getMvT()[mStageCounter]));*/
-			}
-			return;
-		}
 	}
 
 	private int getGrid(int x, int y) {
@@ -265,7 +214,17 @@ public class UIModel {
 	public int getGridSize(){
 		return gridSize;
 	}
-
+	
+	public void resume(){
+		pauseBefore = true;
+	}
+	
+	public long getLed(){
+			return led;
+	}
+	public void setLed(){
+		led = 0;
+	}
 
 	public RectF getSrcPaintArea() {
 		return mSrcPaintArea.getRectF();
@@ -321,10 +280,6 @@ public class UIModel {
 		return 1 - (float) mStageTime / GAME_ATTRIBUTE_MAX_TIME_PER_CLICK;
 	}
 
-	public float getFinalRecord() {
-		return (float) mTotalTime / (mSetCounter * 1000);
-	}
-
 	public int getStatus() {
 		return mGameStatus;
 	}
@@ -352,26 +307,6 @@ public class UIModel {
 	public void setAnswerSet(int[][] answerSet) {
 		this.answerSet = answerSet;
 	}
-
-	public double[] getChT() {
-		double[] chT = new double[GAME_ATTRIBUTE_TOTAL_STAGE];
-		for (int i = 0; i < GAME_ATTRIBUTE_TOTAL_STAGE; i++) {
-			chT[i] = (double) this.chT[i] / 1000;
-		}
-		return chT;
-	}
-
-	public double[] getMvT() {
-		double[] mvT = new double[GAME_ATTRIBUTE_TOTAL_STAGE];
-		for (int i = 0; i < GAME_ATTRIBUTE_TOTAL_STAGE; i++) {
-			mvT[i] = (double) this.mvT[i] / 1000;
-		}
-		return mvT;
-	}
-
-	public void setMgr(DBManager mgr) {
-		this.mgr = mgr;
-	}
 	
 	public int getmStageCounter() {
 		return mSetCounter;
@@ -381,9 +316,21 @@ public class UIModel {
 		this.mSetCounter = mStageCounter;
 	}
 
-	public UIModel(RectArea canvasArea, int orintation, TimeRecorder subject, boolean hardmode) {
-		
-		this.timeRecorder = subject;
+	public long getChT() {
+		return chT;
+	}
+
+	public long getMvT() {
+		return mvT;
+	}
+	
+	public void clearTimer(){
+		chT = 0;
+		mvT = 0;
+	}
+
+
+	public UIModel(RectArea canvasArea, int orintation, boolean hardmode) {
 		mCanvasArea = canvasArea;
 		mTarGrid = new RectArea[TOTAL_GRID_AMOUNT];
 		
@@ -441,7 +388,7 @@ public class UIModel {
 		
 		mTarColor = new ArrayList<ColorData>();
 		
-		initStage();
+		//initStage();
 		mGameStatus = GAME_STATUS_RUNNING;
 		mEffectFlag = EFFECT_FLAG_NO_EFFECT;
 		
@@ -453,7 +400,8 @@ public class UIModel {
 		row1 = 370;
 		row2 = 570;
 		
-		mSetNumber = 5;
-		this.hardMode = hardmode;
+		mSetNumber = MixedConstant.SET_NUMBER;
+		pauseBefore = false;
+		led = 0;
 	}
 }

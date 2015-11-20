@@ -1,37 +1,46 @@
 package elvis.game.cognitive.data;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
-public class TimeRecorder implements Serializable{
+import elvis.game.cognitive.utils.MixedConstant;
+
+public class TimeRecorder implements Serializable {
 
 	private static final long serialVersionUID = -6021316927784505448L;
-	
-	private String subjectID;
-	private int blockNumber;
-	private int hyperNumber;
-	private int homeKeyTime;
-	private int setNumber;
-	private int setLedOn;
-	private double[][][] chT;
-	private double[][][] mvT;
 
-	public TimeRecorder(int blockNumber, int hyperNumber, int setNumber) {
+	private String subjectID;
+	private String homeKeyTime;
+
+	private int blockCounter;
+	private int hyperCounter;
+	private int setCounter;
+
+	private String setLedOn;
+	private int chT;
+	private int mvT;
+
+	public TimeRecorder() {
 		super();
-		this.blockNumber = blockNumber;
-		this.hyperNumber = hyperNumber;
-		this.setNumber = setNumber;
-		chT = new double[blockNumber][hyperNumber][setNumber];
-		mvT = new double[blockNumber][hyperNumber][setNumber];
-		
-		for( int i = 0; i<5; i++){
-			for(int j = 0; j<5; j++){
-				for(int k = 0; k<5; k++){
-					chT[i][j][k] = -1;
-					mvT[i][j][k] = -1;
-				}
-			}
-		}
+	}
+
+	public TimeRecorder(String homeKeyTime) {
+		super();
+		this.homeKeyTime = homeKeyTime;
+		this.setLedOn = MixedConstant.parseTime(System.currentTimeMillis());
+	}
+	
+	
+	public TimeRecorder(String subjectID, String homeKeyTime, int blockCounter,
+			int hyperCounter, int setCounter, String setLedOn, int chT, int mvT) {
+		super();
+		this.subjectID = subjectID;
+		this.homeKeyTime = homeKeyTime;
+		this.blockCounter = blockCounter;
+		this.hyperCounter = hyperCounter;
+		this.setCounter = setCounter;
+		this.setLedOn = setLedOn;
+		this.chT = chT;
+		this.mvT = mvT;
 	}
 
 	public String getSubjectID() {
@@ -42,71 +51,79 @@ public class TimeRecorder implements Serializable{
 		this.subjectID = subjectID;
 	}
 
-	public int getBlockNumber() {
-		return blockNumber;
-	}
-
-	public void setBlockNumber(int blockNumber) {
-		this.blockNumber = blockNumber;
-	}
-
-	public int getHyperNumber() {
-		return hyperNumber;
-	}
-
-	public void setHyperNumber(int hyperNumber) {
-		this.hyperNumber = hyperNumber;
-	}
-
-	public int getHomeKeyTime() {
+	public String getHomeKeyTime() {
 		return homeKeyTime;
 	}
 
-	public void setHomeKeyTime(int homeKeyTime) {
+	public void setHomeKeyTime(String homeKeyTime) {
 		this.homeKeyTime = homeKeyTime;
 	}
 
-	public int getSetNumber() {
-		return setNumber;
+	public int getBlockCounter() {
+		return blockCounter;
 	}
 
-	public void setSetNumber(int setNumber) {
-		this.setNumber = setNumber;
+	public void setBlockCounter(int blockCounter) {
+		this.blockCounter = blockCounter;
 	}
 
-	public int getSetLedOn() {
+	public int getHyperCounter() {
+		return hyperCounter;
+	}
+
+	public void setHyperCounter(int hyperCounter) {
+		this.hyperCounter = hyperCounter;
+	}
+
+	public int getSetCounter() {
+		return setCounter;
+	}
+
+	public void setSetCounter(int setCounter) {
+		this.setCounter = setCounter;
+	}
+
+	public String getSetLedOn() {
 		return setLedOn;
 	}
 
-	public void setSetLedOn(int setLedOn) {
+	public void setSetLedOn(String setLedOn) {
 		this.setLedOn = setLedOn;
 	}
 
-	public double[][][] getChT() {
+	public int getChT() {
 		return chT;
 	}
 
-	public void setChT(double[][][] chT) {
+	public void setChT(int chT) {
 		this.chT = chT;
 	}
 
-	public double[][][] getMvT() {
+	public int getMvT() {
 		return mvT;
 	}
 
-	public void setMvT(double[][][] mvT) {
+	public void setMvT(int mvT) {
 		this.mvT = mvT;
 	}
 
 	@Override
 	public String toString() {
-		return "TimeRecorder [subjectID=" + subjectID + ", blockNumber="
-				+ blockNumber + ", hyperNumber=" + hyperNumber
-				+ ", homeKeyTime=" + homeKeyTime + ", setNumber=" + setNumber
-				+ ", setLedOn=" + setLedOn + ", chT=" + Arrays.toString(chT)
-				+ ", mvT=" + Arrays.toString(mvT) + "]";
+		return "TimeRecorder [subjectID=" + subjectID + ", homeKeyTime="
+				+ homeKeyTime + ", blockCounter=" + blockCounter
+				+ ", hyperCounter=" + hyperCounter + ", setCounter="
+				+ setCounter + ", setLedOn=" + setLedOn + ", chT=" + chT
+				+ ", mvT=" + mvT + "]";
 	}
 	
+	
+
+	
+
+	
+
+	
+
 	
 
 }

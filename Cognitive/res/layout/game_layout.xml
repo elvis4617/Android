@@ -2,18 +2,17 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent" android:layout_height="fill_parent"
 	android:orientation="vertical">
-     
+    
 	<elvis.game.cognitive.MixedColorView
 		android:id="@+id/mixed_color" android:layout_width="fill_parent"
 		android:layout_height="fill_parent" />
 
 	<Button
 	    android:id="@+id/BackToMenu"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:layout_marginLeft="1100dp"
-	    android:layout_marginTop="600dp"
-	    android:elevation="100dp"
-	    android:text="Back to Menu" />
+	    android:layout_width="40dp"
+	    android:layout_height="40dp"
+	    android:layout_marginStart="1230dp"
+	    android:layout_marginTop="750dp"
+	    android:background="@drawable/round_button"/>
     
 </FrameLayout> 

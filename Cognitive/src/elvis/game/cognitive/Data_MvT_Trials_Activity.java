@@ -1,22 +1,14 @@
 package elvis.game.cognitive;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import elvis.game.cognitive.dao.DBManager;
-import elvis.game.cognitive.data.Trials;
 
 public class Data_MvT_Trials_Activity extends Activity {
 
-	private ListView listView;
-	private DBManager mgr;
+	/*private ListView listView;
+	private DBManager mgr;*/
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -27,11 +19,11 @@ public class Data_MvT_Trials_Activity extends Activity {
 
 		setContentView(R.layout.set_trials);
 		//listView = (ListView) this.findViewById(R.id.listview);
-		mgr = new DBManager(this);
-		show();
+		//mgr = new DBManager(this);
+		//show();
 	}
 	
-	private void show() {
+	/*private void show() {
 		List<Trials> trials = mgr.query();
 		List<HashMap<String, Object>> data = new ArrayList<HashMap<String, Object>>();
 		HashMap<String, Object> hm = new HashMap<String, Object>();;
@@ -50,5 +42,5 @@ public class Data_MvT_Trials_Activity extends Activity {
 						R.id.trials, R.id.sets });
 		listView.setAdapter(adapter);
 		
-	}
+	}*/
 }

@@ -1,22 +1,32 @@
 package elvis.game.cognitive;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import elvis.game.cognitive.R;
+import android.widget.Toast;
+import elvis.game.cognitive.dao.DBManager;
 import elvis.game.cognitive.utils.MixedConstant;
 
-public class Prefs extends Activity {
+public class Prefs extends Activity implements OnClickListener{
 
 	private SharedPreferences mBaseSettings;
-
+	private Button clear;
+	private DBManager mgr;
+	
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
@@ -27,6 +37,10 @@ public class Prefs extends Activity {
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		setContentView(R.layout.options);
 
+		clear = (Button) findViewById(R.id.clear_data);
+		mgr = new DBManager(this);
+		clear.setOnClickListener(this);
+		
 		mBaseSettings = getSharedPreferences(
 				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, 0);
 		
@@ -77,12 +91,11 @@ public class Prefs extends Activity {
 						}
 					}
 				});
-
-		CheckBox showTipsCheckbox = (CheckBox) findViewById(R.id.options_showtips_checkbox);
-		showTipsCheckbox.setChecked(mBaseSettings.getBoolean(
-				MixedConstant.PREFERENCE_KEY_SHOWTIPS, true));
-		showTipsCheckbox
-				.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
+		
+		CheckBox debug = (CheckBox) findViewById(R.id.debug);
+		debug.setChecked(mBaseSettings.getBoolean(
+				MixedConstant.PREFERENCE_KEY_DEBUG, true));
+		debug.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
 					@Override
 					public void onCheckedChanged(CompoundButton buttonView,
 							boolean isChecked) {
@@ -90,13 +103,13 @@ public class Prefs extends Activity {
 							mBaseSettings
 									.edit()
 									.putBoolean(
-											MixedConstant.PREFERENCE_KEY_SHOWTIPS,
+											MixedConstant.PREFERENCE_KEY_DEBUG,
 											true).commit();
 						} else {
 							mBaseSettings
 									.edit()
 									.putBoolean(
-											MixedConstant.PREFERENCE_KEY_SHOWTIPS,
+											MixedConstant.PREFERENCE_KEY_DEBUG,
 											false).commit();
 						}
 					}
@@ -108,7 +121,7 @@ public class Prefs extends Activity {
 		final RadioButton hard = (RadioButton)findViewById(R.id.radioHard);
 		
 		if(mBaseSettings.getBoolean(
-				MixedConstant.PREFERENCE_KEY_HARDMODE, false)) hard.setChecked(true);
+				MixedConstant.PREFERENCE_KEY_HARDMODE, true)) hard.setChecked(true);
 		else easy.setChecked(true);
 		
 		modeGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -157,6 +170,51 @@ public class Prefs extends Activity {
 			
 		});
 
+	}
+
+	@SuppressLint("InflateParams")
+	@Override
+	public void onClick(View v) {
+		switch (v.getId()) {
+		case R.id.clear_data:
+			LayoutInflater factory = LayoutInflater.from(this);
+			final View dialogView = factory.inflate(
+					R.layout.alertdialog, null);
+			dialogView.setFocusableInTouchMode(true);
+			dialogView.requestFocus();
+			
+			final AlertDialog dialog = new AlertDialog.Builder(this).setView(dialogView).create();
+			dialog.setCancelable(false);
+			
+			dialog.show();
+			final Button text = (Button) dialogView.findViewById(R.id.password_exit);
+			text.setText("clear");
+			
+			dialogView.findViewById(R.id.password_exit).setOnClickListener(
+					new OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							// TODO Auto-generated method stub
+							final EditText pw = (EditText) dialogView.findViewById(R.id.password);
+							
+							if(pw.getText().toString().equals(MixedConstant.PREFERENCE_KEY_PASSWORD)){
+								mgr.clear();
+								Toast.makeText(getApplicationContext(), "Database cleared.", Toast.LENGTH_SHORT).show(); 
+								dialog.dismiss();
+							}
+						}
+					});
+			
+			dialogView.findViewById(R.id.password_cancel).setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					dialog.dismiss();
+				}
+			});
+			break;
+		}
+		
 	}
 
 }

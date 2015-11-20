@@ -1,17 +1,23 @@
 package elvis.game.cognitive;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+import elvis.game.cognitive.dao.DBManager;
 import elvis.game.cognitive.data.TimeRecorder;
 import elvis.game.cognitive.utils.MixedConstant;
 
@@ -19,19 +25,16 @@ public class Go extends Activity implements OnClickListener {
 
 	private EditText name;
 	private Button go;
+	private Button go_Back;
 	private SharedPreferences mGameSettings;
-	private SharedPreferences mBaseSettings;
-	private TimeRecorder subject;
-	
-	private int BLOCK_NUMBER = 5;
-	private int HYPER_NUMBER = 5;
-	private int SET_NUMBER = 5;
+	private List<TimeRecorder> subjects;
 	
 	private int blockCounter;
-	private int hyperCounter;
-	private int setCounter;
+	
+	private DBManager mgr;
 	
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -40,22 +43,23 @@ public class Go extends Activity implements OnClickListener {
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		
 		setContentView(R.layout.go);
+		mgr = new DBManager(this);
 		
 		mGameSettings = getSharedPreferences(
 				MixedConstant.PREFERENCE_MIXEDCOLOR_GAME_INFO, 0);
-		mBaseSettings = getSharedPreferences(
-				MixedConstant.PREFERENCE_MIXEDCOLOR_BASE_INFO, 0);
-		
-		this.setCounter = mGameSettings.getInt("setCounter", 0);
-		this.hyperCounter = mGameSettings.getInt("hyperCounter", 0);
 		this.blockCounter = mGameSettings.getInt("blockCounter", 0);
 		
 		name = (EditText) findViewById(R.id.name);
 		go = (Button) findViewById(R.id.go_button);
+		go_Back = (Button) findViewById(R.id.go_Back);
 		go.setOnClickListener(this);
+		go_Back.setOnClickListener(this);
+		
+		findViewById(R.id.go_layout).setOnClickListener(this);
+		//name.setOnTouchListener(this);
 		
 		if(blockCounter == 0)
-			this.getWindow().getDecorView().setBackgroundDrawable(getResources().getDrawable(R.drawable.settingrain1));
+			this.getWindow().getDecorView().setBackgroundDrawable(getResources().getDrawable(R.drawable.bg_backup));
 		else if(blockCounter == 1)
 			this.getWindow().getDecorView().setBackgroundDrawable(getResources().getDrawable(R.drawable.settingfood1));
 		else if(blockCounter == 2)
@@ -65,11 +69,8 @@ public class Go extends Activity implements OnClickListener {
 		else if(blockCounter == 4)
 			this.getWindow().getDecorView().setBackgroundDrawable(getResources().getDrawable(R.drawable.settinghome));
 		
+		subjects = new ArrayList<TimeRecorder>();
 		
-		if(mBaseSettings.getBoolean(MixedConstant.PREFERENCE_KEY_HARDMODE, false) && !mGameSettings.getString("subjectBase64", "").equals("")){
-			subject = (TimeRecorder) MixedConstant.getObjectInfo(this);
-			name.setText(subject.getSubjectID());
-		}else subject = new TimeRecorder(BLOCK_NUMBER, HYPER_NUMBER, SET_NUMBER);
 		
 	}
 	
@@ -79,6 +80,7 @@ public class Go extends Activity implements OnClickListener {
 		Log.i("Go destroy", "destroy");
 		super.onDestroy();
 		mGameSettings.edit().putString("subjectBase64", "").commit();
+		mGameSettings.edit().putString("subject_name", "").commit();
 		mGameSettings.edit().putInt("blockCounter", 0).commit();
 		mGameSettings.edit().putInt("hyperCounter", 0).commit();
 		mGameSettings.edit().putInt("setCounter", 0).commit();
@@ -88,28 +90,39 @@ public class Go extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
+			case R.id.go_layout:
+				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);  
+		        imm.hideSoftInputFromWindow(name.getWindowToken(), 0);  
+		        break;
 			case R.id.go_button:
-				subject.setSubjectID(name.getText().toString());
-				
-				Log.i("edittext name", name.getText().toString());
-				Log.i("subject initial", subject.toString());
-				
-				MixedConstant.saveObject(this, subject, MixedConstant.SUBJECT_NAME);
-				
-				Intent i = new Intent(this, MixedColorActivity.class);
-				startActivity(i);
+				if(!name.getText().toString().trim().isEmpty()){
+					Log.i("edittext name", name.getText().toString());
+					Log.i("subject initial", subjects.toString());
+					
+					List<TimeRecorder> list = mgr.queryForSubjects(name.getText().toString());
+					Log.i("list",list.toString());
+					Log.i("list empty",list.isEmpty()+"");
+					if(!list.isEmpty())
+						Toast.makeText(getApplicationContext(), "Subject already exist.", Toast.LENGTH_SHORT).show(); 
+					else{
+						MixedConstant.saveObject(this, subjects, MixedConstant.SUBJECT_NAME);
+						mGameSettings.edit().putString("subject_name", name.getText().toString()).commit();
+						Intent i = new Intent(this, MixedColorActivity.class);
+						startActivity(i);
+					}
+				}else{
+					Toast.makeText(getApplicationContext(), "Please enter subject name.", Toast.LENGTH_SHORT).show();     
+				}
+				break;
+			case R.id.go_Back:
+				finish();
+				break;
 		}
 	}
 	
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		// TODO Auto-generated method stub
-		 if(keyCode == KeyEvent.KEYCODE_BACK){
-			 onDestroy();
-			 startActivity(new Intent(this, MixedColorMenuActivity.class));
-			 return true;
-		 }
-		return super.onKeyDown(keyCode, event);
+	public void finish() {  
+		super.finish();
 	}
 	
 }
