@@ -1,2 +1,2 @@
-# Android
-Read me
+# CognitiveGame
+An Android 2D game.
